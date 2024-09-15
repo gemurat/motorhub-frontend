@@ -1,28 +1,28 @@
-export type SiteConfig = typeof siteConfig;
+export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
-  name: "Next.js + NextUI",
+  name: "MotorHub",
   description: "Make beautiful websites regardless of your design experience.",
   navItems: [
     {
-      label: "Home",
+      label: "Inicio",
       href: "/",
     },
     {
-      label: "Docs",
-      href: "/docs",
+      label: "Ventas",
+      href: "/ventas",
     },
     {
-      label: "Pricing",
-      href: "/pricing",
+      label: "Inventario",
+      href: "/inventario",
     },
     {
-      label: "Blog",
-      href: "/blog",
+      label: "Finanzas",
+      href: "/finanzas",
     },
     {
-      label: "About",
-      href: "/about",
+      label: "Reportes",
+      href: "/reportes",
     },
   ],
   navMenuItems: [
@@ -66,4 +66,4 @@ export const siteConfig = {
     discord: "https://discord.gg/9b6yyZKmH4",
     sponsor: "https://patreon.com/jrgarciadev",
   },
-};
+}
