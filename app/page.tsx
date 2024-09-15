@@ -1,56 +1,83 @@
-import { Link } from "@nextui-org/link";
-import { Snippet } from "@nextui-org/snippet";
-import { Code } from "@nextui-org/code";
-import { button as buttonStyles } from "@nextui-org/theme";
+import { Link } from "@nextui-org/link"
+import { Snippet } from "@nextui-org/snippet"
+import { Code } from "@nextui-org/code"
+import { button as buttonStyles } from "@nextui-org/theme"
 
-import { siteConfig } from "@/config/site";
-import { title, subtitle } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
+import { siteConfig } from "@/config/site"
+import { title, subtitle } from "@/components/primitives"
+import { GithubIcon } from "@/components/icons"
 
 export default function Home() {
   return (
-    <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-      <div className="inline-block max-w-xl text-center justify-center">
-        <h1 className={title()}>Make&nbsp;</h1>
-        <h1 className={title({ color: "violet" })}>beautiful&nbsp;</h1>
-        <br />
-        <h1 className={title()}>
-          websites regardless of your design experience.
-        </h1>
+    <section className="flex flex-col items-center justify-center gap-8 py-12 md:py-16">
+      <div className="inline-block max-w-xl text-center">
+        <h1 className={title()}>Bienvenido!</h1>
         <h2 className={subtitle({ class: "mt-4" })}>
-          Beautiful, fast and modern React UI library.
+          Navega hacia el modulo que necesites.
         </h2>
       </div>
 
-      <div className="flex gap-3">
-        <Link
-          isExternal
-          className={buttonStyles({
-            color: "primary",
-            radius: "full",
-            variant: "shadow",
-          })}
-          href={siteConfig.links.docs}
-        >
-          Documentation
-        </Link>
-        <Link
-          isExternal
-          className={buttonStyles({ variant: "bordered", radius: "full" })}
-          href={siteConfig.links.github}
-        >
-          <GithubIcon size={20} />
-          GitHub
-        </Link>
-      </div>
-
-      <div className="mt-8">
-        <Snippet hideCopyButton hideSymbol variant="bordered">
-          <span>
-            Get started by editing <Code color="primary">app/page.tsx</Code>
-          </span>
-        </Snippet>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <h3 className="text-2xl font-semibold">Ventas</h3>
+          <p className="mt-4 text-base">Manage and track your sales data.</p>
+          <Link
+            className={buttonStyles({
+              color: "primary",
+              radius: "full",
+              variant: "shadow",
+              class: "mt-6",
+            })}
+            href="/ventas"
+          >
+            Go to Ventas
+          </Link>
+        </div>
+        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <h3 className="text-2xl font-semibold">Reportes</h3>
+          <p className="mt-4 text-base">Generate and view detailed reports.</p>
+          <Link
+            className={buttonStyles({
+              variant: "bordered",
+              radius: "full",
+              class: "mt-6",
+            })}
+            href="/reportes"
+          >
+            Go to Reportes
+          </Link>
+        </div>
+        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <h3 className="text-2xl font-semibold">Inventario</h3>
+          <p className="mt-4 text-base">Keep track of your inventory levels.</p>
+          <Link
+            className={buttonStyles({
+              variant: "bordered",
+              radius: "full",
+              class: "mt-6",
+            })}
+            href="/inventario"
+          >
+            Go to Inventario
+          </Link>
+        </div>
+        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <h3 className="text-2xl font-semibold">Finanzas</h3>
+          <p className="mt-4 text-base">
+            Manage your financial data and transactions.
+          </p>
+          <Link
+            className={buttonStyles({
+              variant: "bordered",
+              radius: "full",
+              class: "mt-6",
+            })}
+            href="/finanzas"
+          >
+            Go to Finanzas
+          </Link>
+        </div>
       </div>
     </section>
-  );
+  )
 }
