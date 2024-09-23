@@ -1,5 +1,24 @@
-import { title } from "@/components/primitives"
+import FilterDrawer from "@/components/ventas/FilterDrawer"
+import { getBrand } from "../api/getBrand"
 
-export default function DocsPage() {
-  return <div></div>
+interface Brand {
+  id: number
+  name: string
 }
+
+const DocsPage = async () => {
+  const brands = await getBrand()
+  // console.log("brands", brands)
+
+  return (
+    <div className="w-full">
+      <FilterDrawer
+        filterVal={brands}
+        label="Marca"
+        placeholder="Seleccione Marca"
+      />
+    </div>
+  )
+}
+
+export default DocsPage
