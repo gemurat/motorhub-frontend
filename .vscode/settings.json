@@ -1,9 +1,17 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
+    "categoria",
+    "Consecutivo",
+    "Familias",
+    "Filtros",
     "Marca",
     "Marcas",
     "Modelo",
+    "Modelos",
+    "Porcentaje",
+    "Prefijo",
+    "Productos",
     "Seleccione"
   ]
 }

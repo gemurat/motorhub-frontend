@@ -1,33 +1,40 @@
 "use client"
-import { Select, SelectItem } from "@nextui-org/react"
+import React, { useState } from "react"
+import LazySelect from "./LazySelect"
 
-type filterVal = {
+type FilterVal = {
   id: number
-  name: string
+  name: string | null
 }
 
-export default function FilterDrawer({
+interface FilterDrawerProps {
+  filterVal?: FilterVal[]
+  label?: string
+  placeholder?: string
+}
+
+const FilterDrawer: React.FC<FilterDrawerProps> = ({
   filterVal,
   label,
   placeholder,
-}: {
-  label?: string
-  placeholder?: string
-  filterVal?: filterVal[]
-}) {
+}) => {
+  const [selectedValue, setSelectedValue] = useState<FilterVal | null>(null)
+
+  const handleSelect = (selected: FilterVal) => {
+    setSelectedValue(selected)
+    console.log("Selected value:", selected)
+  }
+
   return (
-    <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
-      <Select
-        label={label ?? "label"}
-        placeholder={placeholder ?? "placeholder"}
-        className="max-w-xs min-w-60"
-      >
-        {(filterVal || []).map((val) => (
-          <SelectItem key={val.id}>
-            {val.name ? val.name : "NO DATA"}
-          </SelectItem>
-        ))}
-      </Select>
+    <div className="flex flex-wrap md:flex-nowrap gap-4">
+      <LazySelect
+        label={label}
+        placeholder={placeholder}
+        filterVal={filterVal}
+        onSelect={handleSelect}
+      />
     </div>
   )
 }
+
+export default FilterDrawer
