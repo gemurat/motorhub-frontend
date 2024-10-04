@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react"
 type FilterVal = {
   id: number
   name: string | null
+  identifier?: string
 }
 
 interface LazySelectProps {
@@ -10,6 +11,7 @@ interface LazySelectProps {
   label?: string
   placeholder?: string
   onSelect: (selected: FilterVal) => void
+  identifier?: string
 }
 
 const LazySelect: React.FC<LazySelectProps> = ({
@@ -17,6 +19,7 @@ const LazySelect: React.FC<LazySelectProps> = ({
   label,
   placeholder,
   onSelect,
+  identifier,
 }) => {
   const [options, setOptions] = useState<FilterVal[]>(filterVal)
   const [inputValue, setInputValue] = useState("")
@@ -27,7 +30,6 @@ const LazySelect: React.FC<LazySelectProps> = ({
   useEffect(() => {
     if (inputValue) {
       setIsLoading(true)
-      // Simulate an API call
       setTimeout(() => {
         const filteredOptions = filterVal.filter((option) =>
           (option.name ?? "").toLowerCase().includes(inputValue.toLowerCase())
@@ -58,7 +60,7 @@ const LazySelect: React.FC<LazySelectProps> = ({
 
   const handleSelect = (option: FilterVal) => {
     setInputValue(option.name ?? "")
-    onSelect(option)
+    onSelect({ ...option, identifier })
     setShowDropdown(false)
   }
 
@@ -82,9 +84,9 @@ const LazySelect: React.FC<LazySelectProps> = ({
           className="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
         />
         {isLoading && (
-          <div className="mt-2 text-gray-700 dark:text-gray-300">
-            Loading...
-          </div>
+          <span className="absolute right-2 top-1/2 transform -translate-y-1/2">
+            <div className="w-4 h-4 border-4 border-t-transparent border-gray-400 rounded-full animate-spin"></div>
+          </span>
         )}
         {showDropdown && (
           <div className="absolute top-full left-0 right-0 max-h-52 overflow-y-auto border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 rounded shadow-lg z-10">
