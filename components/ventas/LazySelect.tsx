@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react"
 type FilterVal = {
   id: number
   name: string | null
-  identifier?: string
 }
 
 interface LazySelectProps {
@@ -11,7 +10,6 @@ interface LazySelectProps {
   label?: string
   placeholder?: string
   onSelect: (selected: FilterVal) => void
-  identifier?: string
 }
 
 const LazySelect: React.FC<LazySelectProps> = ({
@@ -19,7 +17,6 @@ const LazySelect: React.FC<LazySelectProps> = ({
   label,
   placeholder,
   onSelect,
-  identifier,
 }) => {
   const [options, setOptions] = useState<FilterVal[]>(filterVal)
   const [inputValue, setInputValue] = useState("")
@@ -60,7 +57,7 @@ const LazySelect: React.FC<LazySelectProps> = ({
 
   const handleSelect = (option: FilterVal) => {
     setInputValue(option.name ?? "")
-    onSelect({ ...option, identifier })
+    onSelect({ ...option })
     setShowDropdown(false)
   }
 
