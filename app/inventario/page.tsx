@@ -1,9 +1,30 @@
-import { title } from "@/components/primitives";
+import ProductTable from "@/components/ventas/ProductTable"
+import {
+  fetchBrands,
+  fetchModels,
+  fetchProducts,
+  fetchCategory,
+} from "../api/dataFetcher"
 
-export default function PricingPage() {
+const PricingPage = async () => {
+  const brands = await fetchBrands()
+  const model = await fetchModels()
+  const category = await fetchCategory()
+  const produts = await fetchProducts()
+
+  // console.log("category", category)
+  // console.log("model", model)
+
   return (
-    <div>
-      <h1 className={title()}>Pricing</h1>
+    <div className="w-full">
+      {/* products table */}
+      <ProductTable
+        products={produts ?? [""]}
+        brands={brands}
+        model={model}
+        category={category}
+      />
     </div>
-  );
+  )
 }
+export default PricingPage

@@ -10,9 +10,11 @@ import {
   TableCell,
   Pagination,
   getKeyValue,
+  Input,
 } from "@nextui-org/react"
 import LazySelect from "./LazySelect"
 import ShoppingCart from "./ShoppingCart"
+import { SearchIcon } from "@/public/searchIcon"
 
 interface Product {
   marcaid: any
@@ -31,9 +33,6 @@ interface Product {
 
 interface ProductTableProps {
   products: Product[]
-  brands: any
-  model: any
-  category: any
 }
 
 interface FilterVal {
@@ -43,24 +42,9 @@ interface FilterVal {
   identifier: string
 }
 
-const ProductTable: React.FC<ProductTableProps> = ({
-  products,
-  brands,
-  model,
-  category,
-}) => {
-  // const [selectedValue, setSelectedValue] = useState<FilterVal | null>(null)
-  const [brandFilter, setBrandFilter] = useState<FilterVal | null>(null)
-  const [modelFilter, setModelFilter] = useState<FilterVal | null>(null)
-  const [categoryFilter, setCategoryFilter] = useState<FilterVal | null>(null)
+const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
+  const [filterValue, setFilterValue] = React.useState("")
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
-
-  // const handleSelect = (selected: any) => {
-  //   setSelectedValue(selected)
-  //   setPage(1) // Reset to first page on filter change
-  //   console.log("Selected value:", selected)
-  //   console.log(products)
-  // }
   const handleAddProduct = (product: Product) => {
     setAddedProducts((prevProducts) => {
       const existingProduct = prevProducts.find((p) => p.id === product.id)
@@ -82,39 +66,40 @@ const ProductTable: React.FC<ProductTableProps> = ({
         .filter((p) => p.cantidad !== 0)
     })
   }
-  const handleBrandSelect = (selected: any) => {
-    setBrandFilter(selected)
-    setPage(1) // Reset to first page on filter change
-  }
-  const handleModelSelect = (selected: any) => {
-    setModelFilter(selected)
-    setPage(1) // Reset to first page on filter change
-  }
-  const handleCategorySelect = (selected: any) => {
-    setCategoryFilter(selected)
-    setPage(1) // Reset to first page on filter change
-  }
+  const onSearchChange = React.useCallback((value?: string) => {
+    if (value) {
+      setFilterValue(value)
+      setPage(1)
+    } else {
+      setFilterValue("")
+    }
+  }, [])
+  const onClear = React.useCallback(() => {
+    setFilterValue("")
+    setPage(1)
+  }, [])
   const [page, setPage] = React.useState(1)
   const rowsPerPage = 7
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const brandMatch =
-        brandFilter && brandFilter.id
-          ? product.marcaid === brandFilter.id
-          : true
-      const modelMatch =
-        modelFilter && modelFilter.id
-          ? product.modeloid === modelFilter.id
-          : true
-      const categoryMatch =
-        categoryFilter && categoryFilter.id
-          ? product.familiaid === categoryFilter.id
-          : true
-      return brandMatch && modelMatch && categoryMatch
-    })
-  }, [brandFilter, modelFilter, categoryFilter, products])
-
+    return products.filter(
+      (product) =>
+        product?.id
+          .toString()
+          .toLowerCase()
+          .includes(filterValue.toLowerCase()) ||
+        product?.modelo?.toLowerCase().includes(filterValue.toLowerCase()) ||
+        product?.parte
+          .toString()
+          .toLowerCase()
+          .includes(filterValue.toLowerCase()) ||
+        product?.marca?.toLowerCase().includes(filterValue.toLowerCase()) ||
+        product?.ano
+          .toString()
+          .toLowerCase()
+          .includes(filterValue.toLowerCase())
+    )
+  }, [filterValue, products])
   const pages = Math.ceil(filteredProducts.length / rowsPerPage)
 
   const items = useMemo(() => {
@@ -126,23 +111,14 @@ const ProductTable: React.FC<ProductTableProps> = ({
   return (
     <div>
       <div className=" flex gap-4">
-        <LazySelect
-          label={"Filtro Marcas"}
-          placeholder={"Marcas"}
-          filterVal={brands}
-          onSelect={handleBrandSelect}
-        />
-        <LazySelect
-          label={"Filtro Modelo"}
-          placeholder={"Modelos"}
-          filterVal={model}
-          onSelect={handleModelSelect}
-        />
-        <LazySelect
-          label={"Filtro Categoria"}
-          placeholder={"Categoria"}
-          filterVal={category}
-          onSelect={handleCategorySelect}
+        <Input
+          isClearable
+          className="w-full sm:max-w-[44%]"
+          placeholder="Search by name..."
+          startContent={<SearchIcon />}
+          value={filterValue}
+          onClear={() => onClear()}
+          onValueChange={onSearchChange}
         />
       </div>
       <Table

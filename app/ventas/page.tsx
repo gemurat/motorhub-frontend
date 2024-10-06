@@ -1,15 +1,7 @@
 import ProductTable from "@/components/ventas/ProductTable"
-import {
-  fetchBrands,
-  fetchModels,
-  fetchProducts,
-  fetchCategory,
-} from "../api/dataFetcher"
+import { fetchProducts } from "../api/dataFetcher"
 
-const DocsPage = async () => {
-  const brands = await fetchBrands()
-  const model = await fetchModels()
-  const category = await fetchCategory()
+const Ventas = async () => {
   const produts = await fetchProducts()
 
   // console.log("category", category)
@@ -17,15 +9,9 @@ const DocsPage = async () => {
 
   return (
     <div className="w-full">
-      {/* products table */}
-      <ProductTable
-        products={produts ?? [""]}
-        brands={brands}
-        model={model}
-        category={category}
-      />
+      <ProductTable products={produts ?? [""]} />
     </div>
   )
 }
 
-export default DocsPage
+export default Ventas

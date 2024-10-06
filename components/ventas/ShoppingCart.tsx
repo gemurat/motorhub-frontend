@@ -76,7 +76,7 @@ const ShoppingCart: React.FC<ShoppingCartProps> = ({
             )}
           </TableBody>
         </Table>
-        <div>
+        {/* <div>
           <h3 className="text-right text-lg font-bold">
             Total:{" "}
             {new Intl.NumberFormat("en-US", {
@@ -84,7 +84,7 @@ const ShoppingCart: React.FC<ShoppingCartProps> = ({
               currency: "CLP",
             }).format(totalPrice)}
           </h3>
-        </div>
+        </div> */}
       </div>
     </div>
   )
