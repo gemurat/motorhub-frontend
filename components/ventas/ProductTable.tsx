@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useMemo } from "react"
+import { PlusIcon } from "@/public/plusIcon"
 import {
   Table,
   TableHeader,
@@ -11,6 +12,7 @@ import {
   getKeyValue,
 } from "@nextui-org/react"
 import LazySelect from "./LazySelect"
+import ShoppingCart from "./ShoppingCart"
 
 interface Product {
   marcaid: any
@@ -24,6 +26,7 @@ interface Product {
   existencia: number
   precio1: number
   moneda: string
+  cantidad?: number
 }
 
 interface ProductTableProps {
@@ -50,6 +53,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
   const [brandFilter, setBrandFilter] = useState<FilterVal | null>(null)
   const [modelFilter, setModelFilter] = useState<FilterVal | null>(null)
   const [categoryFilter, setCategoryFilter] = useState<FilterVal | null>(null)
+  const [addedProducts, setAddedProducts] = useState<Product[]>([])
 
   // const handleSelect = (selected: any) => {
   //   setSelectedValue(selected)
@@ -57,6 +61,27 @@ const ProductTable: React.FC<ProductTableProps> = ({
   //   console.log("Selected value:", selected)
   //   console.log(products)
   // }
+  const handleAddProduct = (product: Product) => {
+    setAddedProducts((prevProducts) => {
+      const existingProduct = prevProducts.find((p) => p.id === product.id)
+      if (existingProduct) {
+        return prevProducts.map((p) =>
+          p.id === product.id ? { ...p, cantidad: (p.cantidad || 1) + 1 } : p
+        )
+      } else {
+        return [...prevProducts, { ...product, cantidad: 1 }]
+      }
+    })
+  }
+  const handleRemoveProduct = (id: string) => {
+    setAddedProducts((prevProducts) => {
+      return prevProducts
+        .map((p) =>
+          p.id.toString() === id ? { ...p, cantidad: (p.cantidad || 1) - 1 } : p
+        )
+        .filter((p) => p.cantidad !== 0)
+    })
+  }
   const handleBrandSelect = (selected: any) => {
     setBrandFilter(selected)
     setPage(1) // Reset to first page on filter change
@@ -74,13 +99,18 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const brandMatch = brandFilter ? product.marcaid === brandFilter.id : true
-      const modelMatch = modelFilter
-        ? product.modeloid === modelFilter.id
-        : true
-      const categoryMatch = categoryFilter
-        ? product.familiaid === categoryFilter.id
-        : true
+      const brandMatch =
+        brandFilter && brandFilter.id
+          ? product.marcaid === brandFilter.id
+          : true
+      const modelMatch =
+        modelFilter && modelFilter.id
+          ? product.modeloid === modelFilter.id
+          : true
+      const categoryMatch =
+        categoryFilter && categoryFilter.id
+          ? product.familiaid === categoryFilter.id
+          : true
       return brandMatch && modelMatch && categoryMatch
     })
   }, [brandFilter, modelFilter, categoryFilter, products])
@@ -94,7 +124,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
   }, [page, filteredProducts])
 
   return (
-    <div className="max-h-[600px] ">
+    <div>
       <div className=" flex gap-4">
         <LazySelect
           label={"Filtro Marcas"}
@@ -143,24 +173,50 @@ const ProductTable: React.FC<ProductTableProps> = ({
           <TableColumn key="marca">Marca</TableColumn>
           <TableColumn key="existencia">Existencia</TableColumn>
           <TableColumn key="precio1">Precio</TableColumn>
+          <TableColumn key="action"> </TableColumn>
         </TableHeader>
         <TableBody items={items}>
           {(item) => (
-            <TableRow key={item.id} className="h-16">
+            <TableRow
+              key={item.id}
+              className={`h-16 ${item.existencia === 0 ? "opacity-50" : ""}`}
+            >
               {(columnKey) => (
                 <TableCell>
-                  {columnKey === "precio1"
-                    ? new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "CLP",
-                      }).format(item[columnKey])
-                    : getKeyValue(item, columnKey)}
+                  {columnKey === "precio1" ? (
+                    new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "CLP",
+                    }).format(item[columnKey])
+                  ) : columnKey === "action" ? (
+                    <button
+                      onClick={() => handleAddProduct(item)}
+                      disabled={item.existencia === 0}
+                    >
+                      <PlusIcon />
+                    </button>
+                  ) : (
+                    getKeyValue(item, columnKey)
+                  )}
                 </TableCell>
               )}
             </TableRow>
           )}
         </TableBody>
       </Table>
+      <ShoppingCart
+        addedProducts={addedProducts.map((product) => ({
+          id: product.id.toString(),
+          modelo: product.modelo,
+          ano: product.ano.toString(),
+          parte: product.parte,
+          marca: product.marca,
+          existencia: product.existencia.toString(),
+          precio1: product.precio1,
+          cantidad: product.cantidad ?? 0,
+        }))}
+        removeProduct={handleRemoveProduct}
+      />
     </div>
   )
 }

@@ -1,4 +1,3 @@
-import FilterDrawer from "@/components/ventas/FilterDrawer"
 import ProductTable from "@/components/ventas/ProductTable"
 import {
   fetchBrands,
@@ -12,7 +11,6 @@ const DocsPage = async () => {
   const model = await fetchModels()
   const category = await fetchCategory()
   const produts = await fetchProducts()
-  console.log(produts)
 
   // console.log("category", category)
   // console.log("model", model)

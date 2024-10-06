@@ -74,8 +74,15 @@ const LazySelect: React.FC<LazySelectProps> = ({
           placeholder={placeholder}
           value={inputValue}
           onChange={(e) => {
-            setInputValue(e.target.value)
+            const value = e.target.value
+            setInputValue(value)
             setShowDropdown(true)
+            if (value === "") {
+              handleSelect({
+                id: 0,
+                name: null,
+              })
+            }
           }}
           onFocus={() => setShowDropdown(true)}
           className="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"

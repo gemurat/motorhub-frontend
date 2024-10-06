@@ -1,14 +1,17 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
+    "cantidad",
     "categoria",
     "Consecutivo",
+    "Eliminar",
     "Existencia",
     "familiaid",
     "Familias",
     "Filtro",
     "Filtros",
     "Marca",
+    "marcaid",
     "Marcas",
     "Modelo",
     "modeloid",
