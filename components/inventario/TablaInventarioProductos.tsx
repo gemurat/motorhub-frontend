@@ -1,11 +1,5 @@
 "use client"
-import React, { useState, useMemo, useEffect } from "react"
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Button,
-} from "@nextui-org/react"
+import React, { useState, useMemo } from "react"
 import { PlusIcon } from "@/public/plusIcon"
 import {
   Table,
@@ -18,15 +12,15 @@ import {
   getKeyValue,
   Input,
 } from "@nextui-org/react"
-import LazySelect from "./LazySelect"
-import ShoppingCart from "./ShoppingCart"
+import LazySelect from "../ventas/LazySelect"
+import ShoppingCart from "../ventas/ShoppingCart"
 import { SearchIcon } from "@/public/searchIcon"
 
 interface Product {
   marcaid: any
   modeloid: any
   familiaid: any
-  id: string
+  id: number
   modelo: string
   ano: number
   parte: string
@@ -39,7 +33,7 @@ interface Product {
 
 interface ProductTableProps {
   products: Product[]
-  // onProductSelect: (product: string) => void
+  isShoppingCart?: boolean
 }
 
 interface FilterVal {
@@ -49,13 +43,11 @@ interface FilterVal {
   identifier: string
 }
 
-const ProductTable: React.FC<ProductTableProps> = ({
+const TablaInventarioProductos: React.FC<ProductTableProps> = ({
   products,
-  // onProductSelect,
+  isShoppingCart = true,
 }) => {
-  const [semejantes, setSemejantes] = useState<any>([])
-  const [semejanteData, setSemejanteData] = useState<any>([])
-  const [filterValue, setFilterValue] = useState("")
+  const [filterValue, setFilterValue] = React.useState("")
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
   const handleAddProduct = (product: Product) => {
     setAddedProducts((prevProducts) => {
@@ -68,26 +60,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
         return [...prevProducts, { ...product, cantidad: 1 }]
       }
     })
-  }
-  useEffect(() => {
-    const fetchSemejanteData = async () => {
-      if (semejantes) {
-        try {
-          const response = await fetch(
-            `api/semejantes?semejanteId=${semejantes}`
-          )
-          const data = await response.json()
-          setSemejanteData(data)
-        } catch (error) {
-          console.error("Error fetching semejante data:", error)
-        }
-      }
-    }
-
-    fetchSemejanteData()
-  }, [semejantes])
-  const handleFetchSemejante = (id: string) => {
-    setSemejantes(id)
   }
   const handleRemoveProduct = (id: string) => {
     setAddedProducts((prevProducts) => {
@@ -125,7 +97,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
           .toString()
           .toLowerCase()
           .includes(filterValue.toLowerCase()) ||
-        product?.marca?.toLowerCase().includes(filterValue.toLowerCase())
+        product?.marca?.toLowerCase().includes(filterValue.toLowerCase()) ||
+        product?.ano
+          .toString()
+          .toLowerCase()
+          .includes(filterValue.toLowerCase())
     )
   }, [filterValue, products])
   const pages = Math.ceil(filteredProducts.length / rowsPerPage)
@@ -199,10 +175,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     >
                       <PlusIcon />
                     </button>
-                  ) : columnKey === "id" ? (
-                    <button onClick={() => handleFetchSemejante(item.id)}>
-                      {getKeyValue(item, columnKey)}
-                    </button>
                   ) : (
                     getKeyValue(item, columnKey)
                   )}
@@ -212,21 +184,23 @@ const ProductTable: React.FC<ProductTableProps> = ({
           )}
         </TableBody>
       </Table>
-      <ShoppingCart
-        addedProducts={addedProducts.map((product) => ({
-          id: product.id.toString(),
-          modelo: product.modelo,
-          ano: product.ano.toString(),
-          parte: product.parte,
-          marca: product.marca,
-          existencia: product.existencia.toString(),
-          precio1: product.precio1,
-          cantidad: product.cantidad ?? 0,
-        }))}
-        removeProduct={handleRemoveProduct}
-      />
+      {isShoppingCart && (
+        <ShoppingCart
+          addedProducts={addedProducts.map((product) => ({
+            id: product.id.toString(),
+            modelo: product.modelo,
+            ano: product.ano.toString(),
+            parte: product.parte,
+            marca: product.marca,
+            existencia: product.existencia.toString(),
+            precio1: product.precio1,
+            cantidad: product.cantidad ?? 0,
+          }))}
+          removeProduct={handleRemoveProduct}
+        />
+      )}
     </div>
   )
 }
 
-export default ProductTable
+export default TablaInventarioProductos

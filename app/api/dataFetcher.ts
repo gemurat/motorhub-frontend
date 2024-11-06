@@ -2,6 +2,7 @@ import { getBrand } from "./getBrand"
 import { getCategory } from "./getCategory"
 import { getModels } from "./getModel"
 import { getProducts } from "./getProducts"
+import { getVentas } from "./getVentas"
 
 export const fetchBrands = async () => {
   return await getBrand()
@@ -17,4 +18,7 @@ export const fetchCategory = async () => {
 
 export const fetchProducts = async () => {
   return await getProducts()
+}
+export const fetchVentas = async (startDate?: string, endDate?: string) => {
+  return await getVentas(startDate, endDate)
 }
