@@ -2,15 +2,7 @@ import { NextResponse } from "next/server"
 import { query } from "@/db"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const semejanteId = searchParams.get("semejanteId")
-
-  if (!semejanteId) {
-    return NextResponse.json(
-      { error: "semejanteId is required" },
-      { status: 400 }
-    )
-  }
+  //   const semejanteId = searchParams.get("semejanteId")
 
   try {
     const result = await query(
@@ -34,9 +26,7 @@ export async function GET(request: Request) {
       LEFT JOIN "TblCat_Marcas" AS marca
       ON marca."Id" = semejante."Marca"
       LEFT JOIN "TblCat_MarcasProductos" AS marcaProducto
-      ON marcaProducto."Id" = producto."MarcaProducto"
-      WHERE producto."Id" = $1`,
-      [semejanteId]
+      ON marcaProducto."Id" = producto."MarcaProducto"`
     )
     const processedResult = result.rows.map(
       (row: {
@@ -60,11 +50,12 @@ export async function GET(request: Request) {
         marca: row.Marca,
         precio1: row.Precio1,
         measurements: row.Medidas,
-        currency: row.Moneda,
+        // currency: row.Moneda,
         supplierCode: row.CodigoProveedor,
         originalCode: row.CodigoOriginal,
       })
     )
+
     return NextResponse.json(processedResult)
   } catch (error) {
     console.error("Error fetching data from PostgreSQL:", error)

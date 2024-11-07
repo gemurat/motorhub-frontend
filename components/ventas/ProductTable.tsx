@@ -1,10 +1,13 @@
 "use client"
 import React, { useState, useMemo, useEffect } from "react"
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   Button,
+  useDisclosure,
 } from "@nextui-org/react"
 import { PlusIcon } from "@/public/plusIcon"
 import {
@@ -35,10 +38,13 @@ interface Product {
   precio1: number
   moneda: string
   cantidad?: number
+  measurements: string
+  supplierCode: string
+  originalCode: string
 }
 
 interface ProductTableProps {
-  products: Product[]
+  // products: Product[]
   // onProductSelect: (product: string) => void
 }
 
@@ -49,13 +55,13 @@ interface FilterVal {
   identifier: string
 }
 
-const ProductTable: React.FC<ProductTableProps> = ({
-  products,
-  // onProductSelect,
-}) => {
+const ProductTable: React.FC<ProductTableProps> = () => {
+  const [products, setProducts] = useState<Product[]>([])
   const [semejantes, setSemejantes] = useState<any>([])
   const [semejanteData, setSemejanteData] = useState<any>([])
   const [filterValue, setFilterValue] = useState("")
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
   const handleAddProduct = (product: Product) => {
     setAddedProducts((prevProducts) => {
@@ -69,9 +75,26 @@ const ProductTable: React.FC<ProductTableProps> = ({
       }
     })
   }
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch("api/productos")
+        const data = await response.json()
+        // console.log(products)
+
+        setProducts(data)
+      } catch (error) {
+        console.error("Error fetching products:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
     const fetchSemejanteData = async () => {
-      if (semejantes) {
+      if (semejantes.length > 0) {
+        setLoading(true)
         try {
           const response = await fetch(
             `api/semejantes?semejanteId=${semejantes}`
@@ -80,14 +103,32 @@ const ProductTable: React.FC<ProductTableProps> = ({
           setSemejanteData(data)
         } catch (error) {
           console.error("Error fetching semejante data:", error)
+        } finally {
+          setLoading(false)
         }
       }
     }
-
     fetchSemejanteData()
   }, [semejantes])
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch("api/productos")
+        const data = await response.json()
+        setProducts(data)
+      } catch (error) {
+        console.error("Error fetching products:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
   const handleFetchSemejante = (id: string) => {
     setSemejantes(id)
+    onOpen()
   }
   const handleRemoveProduct = (id: string) => {
     setAddedProducts((prevProducts) => {
@@ -113,119 +154,183 @@ const ProductTable: React.FC<ProductTableProps> = ({
   const [page, setPage] = React.useState(1)
   const rowsPerPage = 7
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(
-      (product) =>
-        product?.id
-          .toString()
-          .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
-        product?.modelo?.toLowerCase().includes(filterValue.toLowerCase()) ||
-        product?.parte
-          .toString()
-          .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
-        product?.marca?.toLowerCase().includes(filterValue.toLowerCase())
-    )
-  }, [filterValue, products])
-  const pages = Math.ceil(filteredProducts.length / rowsPerPage)
+  const pages =
+    products.length > 0 ? Math.ceil(products.length / rowsPerPage) : 0
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage
     const end = start + rowsPerPage
-    return filteredProducts.slice(start, end)
-  }, [page, filteredProducts])
+    return products ? products.slice(start, end) : []
+  }, [page, products])
+  // console.log(semejanteData)
 
   return (
-    <div>
-      <div className=" flex gap-4">
-        <Input
-          isClearable
-          className="w-full sm:max-w-[44%]"
-          placeholder="Search by name..."
-          startContent={<SearchIcon />}
-          value={filterValue}
-          onClear={() => onClear()}
-          onValueChange={onSearchChange}
-        />
-      </div>
-      <Table
-        className="mt-5"
-        aria-label="Product table with client side pagination"
-        bottomContent={
-          <div className="flex w-full justify-center">
-            <Pagination
-              isCompact
-              showControls
-              showShadow
-              color="secondary"
-              page={page}
-              total={pages}
-              onChange={(page) => setPage(page)}
-            />
-          </div>
-        }
-        classNames={{
-          wrapper: "min-h-[550px]",
-        }}
-      >
-        <TableHeader>
-          <TableColumn key="id">ID</TableColumn>
-          <TableColumn key="modelo">Modelo</TableColumn>
-          <TableColumn key="ano">Año</TableColumn>
-          <TableColumn key="parte">Parte</TableColumn>
-          <TableColumn key="marca">Marca</TableColumn>
-          <TableColumn key="existencia">Existencia</TableColumn>
-          <TableColumn key="precio1">Precio</TableColumn>
-          <TableColumn key="action"> </TableColumn>
-        </TableHeader>
-        <TableBody items={items}>
-          {(item) => (
-            <TableRow
-              key={item.id}
-              className={`h-16 ${item.existencia === 0 ? "opacity-50" : ""}`}
-            >
-              {(columnKey) => (
+    products.length > 0 && (
+      <div>
+        <div className=" flex gap-4">
+          <Input
+            isClearable
+            className="w-full sm:max-w-[44%]"
+            placeholder="Buscar..."
+            startContent={<SearchIcon />}
+            value={filterValue}
+            onClear={() => onClear()}
+            onValueChange={onSearchChange}
+          />
+        </div>
+        <Table
+          className="mt-5"
+          aria-label="Product table with client side pagination"
+          bottomContent={
+            <div className="flex w-full justify-center">
+              <Pagination
+                isCompact
+                showControls
+                showShadow
+                color="secondary"
+                page={page}
+                total={pages}
+                onChange={(page) => setPage(page)}
+              />
+            </div>
+          }
+          classNames={{
+            wrapper: "min-h-[550px]",
+          }}
+        >
+          <TableHeader>
+            <TableColumn key="id">ID</TableColumn>
+            <TableColumn key="modelo">Modelo</TableColumn>
+            <TableColumn key="ano">Año</TableColumn>
+            <TableColumn key="parte">Parte</TableColumn>
+            <TableColumn key="existencia">Existencia</TableColumn>
+            <TableColumn key="marca">Marca</TableColumn>
+            <TableColumn key="precio1">Precio</TableColumn>
+            <TableColumn key="measurements">Medidas</TableColumn>
+            <TableColumn key="supplierCode">Codigo Proveedor</TableColumn>
+            <TableColumn key="originalCode">Codigo Original</TableColumn>
+            <TableColumn key="action"> </TableColumn>
+            {/* agregar codigo proveedor */}
+          </TableHeader>
+          <TableBody>
+            {items.map((item, index) => (
+              <TableRow
+                key={`${item.id}-${index}`}
+                className={`h-16 ${item.existencia === 0 ? "opacity-50" : ""}`}
+              >
                 <TableCell>
-                  {columnKey === "precio1" ? (
-                    new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "CLP",
-                    }).format(item[columnKey])
-                  ) : columnKey === "action" ? (
-                    <button
-                      onClick={() => handleAddProduct(item)}
-                      disabled={item.existencia === 0}
-                    >
-                      <PlusIcon />
-                    </button>
-                  ) : columnKey === "id" ? (
-                    <button onClick={() => handleFetchSemejante(item.id)}>
-                      {getKeyValue(item, columnKey)}
-                    </button>
-                  ) : (
-                    getKeyValue(item, columnKey)
-                  )}
+                  <button onClick={() => handleFetchSemejante(item.id)}>
+                    {item.id}
+                  </button>
                 </TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <ShoppingCart
-        addedProducts={addedProducts.map((product) => ({
-          id: product.id.toString(),
-          modelo: product.modelo,
-          ano: product.ano.toString(),
-          parte: product.parte,
-          marca: product.marca,
-          existencia: product.existencia.toString(),
-          precio1: product.precio1,
-          cantidad: product.cantidad ?? 0,
-        }))}
-        removeProduct={handleRemoveProduct}
-      />
-    </div>
+                <TableCell>{item.modelo}</TableCell>
+                <TableCell>{item.ano}</TableCell>
+                <TableCell>{item.parte}</TableCell>
+                <TableCell>{item.existencia}</TableCell>
+                <TableCell>{item.marca}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "CLP",
+                  }).format(item.precio1)}
+                </TableCell>
+                <TableCell>{item.measurements}</TableCell>
+                <TableCell>{item.supplierCode}</TableCell>
+                <TableCell>{item.originalCode}</TableCell>
+                <TableCell>
+                  <button
+                    onClick={() => handleAddProduct(item)}
+                    disabled={item.existencia === 0}
+                  >
+                    <PlusIcon />
+                  </button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <ShoppingCart
+          addedProducts={addedProducts.map((product) => ({
+            id: product.id.toString(),
+            modelo: product.modelo,
+            ano: product.ano.toString(),
+            parte: product.parte,
+            marca: product.marca,
+            existencia: product.existencia.toString(),
+            precio1: product.precio1,
+            cantidad: product.cantidad ?? 0,
+          }))}
+          removeProduct={handleRemoveProduct}
+        />
+        <Modal
+          scrollBehavior="inside"
+          size="5xl"
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  Semejantes
+                </ModalHeader>
+                <ModalBody>
+                  {loading ? (
+                    <div>Loading...</div>
+                  ) : semejanteData.length > 0 ? (
+                    <Table aria-label="Semejante data table">
+                      <TableHeader>
+                        <TableColumn>ID</TableColumn>
+                        <TableColumn>Modelo</TableColumn>
+                        <TableColumn>Año</TableColumn>
+                        <TableColumn>Parte</TableColumn>
+                        <TableColumn>Marca</TableColumn>
+                        <TableColumn>Existencia</TableColumn>
+                        <TableColumn>Precio</TableColumn>
+                        <TableColumn> </TableColumn>
+                      </TableHeader>
+                      <TableBody>
+                        {semejanteData.map((data: any, index: number) => (
+                          <TableRow key={`${data.id}-${index}`}>
+                            <TableCell>{data.id}</TableCell>
+                            <TableCell>{data.modelo}</TableCell>
+                            <TableCell>{data.ano}</TableCell>
+                            <TableCell>{data.parte}</TableCell>
+                            <TableCell>{data.marca}</TableCell>
+                            <TableCell>{data.existencia}</TableCell>
+                            <TableCell>
+                              {new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "CLP",
+                              }).format(data.precio1)}
+                            </TableCell>
+                            <TableCell>
+                              <button
+                                onClick={() => handleAddProduct(data)}
+                                disabled={data.existencia === 0}
+                              >
+                                <PlusIcon />
+                              </button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div>Sim Semejantes Disponibles</div>
+                  )}
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    Cerrar
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+      </div>
+    )
   )
 }
 
