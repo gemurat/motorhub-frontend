@@ -60,9 +60,10 @@ const ProductTable: React.FC<ProductTableProps> = () => {
   const [semejantes, setSemejantes] = useState<any>([])
   const [semejanteData, setSemejanteData] = useState<any>([])
   const [filterValue, setFilterValue] = useState("")
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
+  const [idFilterValue, setIdFilterValue] = useState("")
+
   const handleAddProduct = (product: Product) => {
     setAddedProducts((prevProducts) => {
       const existingProduct = prevProducts.find((p) => p.id === product.id)
@@ -139,6 +140,52 @@ const ProductTable: React.FC<ProductTableProps> = () => {
         .filter((p) => p.cantidad !== 0)
     })
   }
+
+  const onClear = React.useCallback(() => {
+    setFilterValue("")
+    setPage(1)
+  }, [])
+
+  const normalizeQuery = (query: any) => {
+    return query.toLowerCase().split(" ").filter(Boolean)
+  }
+  const filterProducts = (
+    products: Product[],
+    query: string,
+    idQuery: string
+  ): Product[] => {
+    const queryParts: string[] = normalizeQuery(query)
+    return products.filter((product: Product) => {
+      const searchableText: string =
+        `${product.modelo} ${product.parte} ${product.marca} ${product.supplierCode} ${product.originalCode}`.toLowerCase()
+      const matchesQuery = queryParts.every((part) =>
+        searchableText.includes(part)
+      )
+      const matchesId = idQuery
+        ? product.id?.toLowerCase().includes(idQuery.toLowerCase())
+        : true
+      return matchesQuery && matchesId
+    })
+  }
+
+  const filteredProducts = useMemo(() => {
+    return filterProducts(products, filterValue, idFilterValue)
+  }, [products, filterValue, idFilterValue])
+
+  const [page, setPage] = React.useState(1)
+  const rowsPerPage = 7
+
+  const pages =
+    filteredProducts.length > 0
+      ? Math.ceil(filteredProducts.length / rowsPerPage)
+      : 0
+
+  const items = useMemo(() => {
+    const start = (page - 1) * rowsPerPage
+    const end = start + rowsPerPage
+    return filteredProducts.slice(start, end)
+  }, [page, filteredProducts])
+
   const onSearchChange = React.useCallback((value?: string) => {
     if (value) {
       setFilterValue(value)
@@ -147,27 +194,29 @@ const ProductTable: React.FC<ProductTableProps> = () => {
       setFilterValue("")
     }
   }, [])
-  const onClear = React.useCallback(() => {
-    setFilterValue("")
+
+  const onIdSearchChange = (value: string) => {
+    setIdFilterValue(value)
     setPage(1)
-  }, [])
-  const [page, setPage] = React.useState(1)
-  const rowsPerPage = 7
-
-  const pages =
-    products.length > 0 ? Math.ceil(products.length / rowsPerPage) : 0
-
-  const items = useMemo(() => {
-    const start = (page - 1) * rowsPerPage
-    const end = start + rowsPerPage
-    return products ? products.slice(start, end) : []
-  }, [page, products])
+  }
   // console.log(semejanteData)
 
   return (
     products.length > 0 && (
       <div>
-        <div className=" flex gap-4">
+        <div className="flex gap-4">
+          <div className="w-[200px]">
+            <Input
+              fullWidth={false}
+              isClearable
+              className="w-full"
+              placeholder="Buscar por ID..."
+              startContent={<SearchIcon />}
+              value={idFilterValue}
+              onClear={() => onIdSearchChange("")}
+              onValueChange={onIdSearchChange}
+            />
+          </div>
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
@@ -210,7 +259,6 @@ const ProductTable: React.FC<ProductTableProps> = () => {
             <TableColumn key="supplierCode">Codigo Proveedor</TableColumn>
             <TableColumn key="originalCode">Codigo Original</TableColumn>
             <TableColumn key="action"> </TableColumn>
-            {/* agregar codigo proveedor */}
           </TableHeader>
           <TableBody>
             {items.map((item, index) => (
