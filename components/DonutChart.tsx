@@ -227,7 +227,7 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
       <div
         ref={forwardedRef}
         className={cx("h-40 w-40", className)}
-        tremor-id="tremor-raw"
+        // tremor-id="tremor-raw"
         {...other}
       >
         <ResponsiveContainer className="size-full">
