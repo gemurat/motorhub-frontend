@@ -88,7 +88,11 @@ const LazySelect: React.FC<LazySelectProps> = ({
           className="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
         />
         {isLoading && (
-          <span className="absolute right-2 top-1/2 transform -translate-y-1/2">
+          <span
+            className="absolute right-2 top-1/2 transform -translate-y-1/2"
+            role="status"
+            aria-live="polite"
+          >
             <div className="w-4 h-4 border-4 border-t-transparent border-gray-400 rounded-full animate-spin"></div>
           </span>
         )}
