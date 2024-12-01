@@ -1,5 +1,5 @@
-"use client"
-import React, { useState, useMemo, useEffect } from "react"
+'use client'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Modal,
   ModalContent,
@@ -8,8 +8,8 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
-} from "@nextui-org/react"
-import { PlusIcon } from "@/public/plusIcon"
+} from '@nextui-org/react'
+import { PlusIcon } from '@/public/plusIcon'
 import {
   Table,
   TableHeader,
@@ -20,10 +20,10 @@ import {
   Pagination,
   getKeyValue,
   Input,
-} from "@nextui-org/react"
-import LazySelect from "./LazySelect"
-import ShoppingCart from "./ShoppingCart"
-import { SearchIcon } from "@/public/searchIcon"
+} from '@nextui-org/react'
+// import LazySelect from "./LazySelect"
+import ShoppingCart from './ShoppingCart'
+import { SearchIcon } from '@/public/searchIcon'
 
 interface Product {
   marcaid: any
@@ -59,16 +59,16 @@ const ProductTable: React.FC<ProductTableProps> = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [semejantes, setSemejantes] = useState<any>([])
   const [semejanteData, setSemejanteData] = useState<any>([])
-  const [filterValue, setFilterValue] = useState("")
+  const [filterValue, setFilterValue] = useState('')
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
-  const [idFilterValue, setIdFilterValue] = useState("")
+  const [idFilterValue, setIdFilterValue] = useState('')
 
   const handleAddProduct = (product: Product) => {
-    setAddedProducts((prevProducts) => {
-      const existingProduct = prevProducts.find((p) => p.id === product.id)
+    setAddedProducts(prevProducts => {
+      const existingProduct = prevProducts.find(p => p.id === product.id)
       if (existingProduct) {
-        return prevProducts.map((p) =>
+        return prevProducts.map(p =>
           p.id === product.id ? { ...p, cantidad: (p.cantidad || 1) + 1 } : p
         )
       } else {
@@ -82,13 +82,13 @@ const ProductTable: React.FC<ProductTableProps> = () => {
     const fetchProducts = async () => {
       setLoading(true)
       try {
-        const response = await fetch("api/productos")
+        const response = await fetch('api/productos')
         const data = await response.json()
         // console.log(products)
 
         setProducts(data)
       } catch (error) {
-        console.error("Error fetching products:", error)
+        console.error('Error fetching products:', error)
       } finally {
         setLoading(false)
       }
@@ -103,7 +103,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
           const data = await response.json()
           setSemejanteData(data)
         } catch (error) {
-          console.error("Error fetching semejante data:", error)
+          console.error('Error fetching semejante data:', error)
         } finally {
           setLoading(false)
         }
@@ -116,11 +116,11 @@ const ProductTable: React.FC<ProductTableProps> = () => {
     const fetchProducts = async () => {
       setLoading(true)
       try {
-        const response = await fetch("api/productos")
+        const response = await fetch('api/productos')
         const data = await response.json()
         setProducts(data)
       } catch (error) {
-        console.error("Error fetching products:", error)
+        console.error('Error fetching products:', error)
       } finally {
         setLoading(false)
       }
@@ -132,22 +132,22 @@ const ProductTable: React.FC<ProductTableProps> = () => {
     onOpen()
   }
   const handleRemoveProduct = (id: string) => {
-    setAddedProducts((prevProducts) => {
+    setAddedProducts(prevProducts => {
       return prevProducts
-        .map((p) =>
+        .map(p =>
           p.id.toString() === id ? { ...p, cantidad: (p.cantidad || 1) - 1 } : p
         )
-        .filter((p) => p.cantidad !== 0)
+        .filter(p => p.cantidad !== 0)
     })
   }
 
   const onClear = React.useCallback(() => {
-    setFilterValue("")
+    setFilterValue('')
     setPage(1)
   }, [])
 
   const normalizeQuery = (query: any) => {
-    return query.toLowerCase().split(" ").filter(Boolean)
+    return query.toLowerCase().split(' ').filter(Boolean)
   }
   const filterProducts = (
     products: Product[],
@@ -158,7 +158,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
     return products.filter((product: Product) => {
       const searchableText: string =
         `${product.modelo} ${product.parte} ${product.marca} ${product.supplierCode} ${product.originalCode}`.toLowerCase()
-      const matchesQuery = queryParts.every((part) =>
+      const matchesQuery = queryParts.every(part =>
         searchableText.includes(part)
       )
       const matchesId = idQuery
@@ -191,7 +191,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
       setFilterValue(value)
       setPage(1)
     } else {
-      setFilterValue("")
+      setFilterValue('')
     }
   }, [])
 
@@ -213,7 +213,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
               placeholder="Buscar por ID..."
               startContent={<SearchIcon />}
               value={idFilterValue}
-              onClear={() => onIdSearchChange("")}
+              onClear={() => onIdSearchChange('')}
               onValueChange={onIdSearchChange}
             />
           </div>
@@ -239,12 +239,12 @@ const ProductTable: React.FC<ProductTableProps> = () => {
                 color="secondary"
                 page={page}
                 total={pages}
-                onChange={(page) => setPage(page)}
+                onChange={page => setPage(page)}
               />
             </div>
           }
           classNames={{
-            wrapper: "min-h-[550px]",
+            wrapper: 'min-h-[550px]',
           }}
         >
           <TableHeader>
@@ -264,7 +264,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
             {items.map((item, index) => (
               <TableRow
                 key={`${item.id}-${index}`}
-                className={`h-16 ${item.existencia === 0 ? "opacity-50" : ""}`}
+                className={`h-16 ${item.existencia === 0 ? 'opacity-50' : ''}`}
               >
                 <TableCell>
                   <button onClick={() => handleFetchSemejante(item.id)}>
@@ -276,9 +276,9 @@ const ProductTable: React.FC<ProductTableProps> = () => {
                 <TableCell>{item.measurements}</TableCell>
                 <TableCell>{item.ano}</TableCell>
                 <TableCell>
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "CLP",
+                  {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'CLP',
                   }).format(item.precio1)}
                 </TableCell>
                 <TableCell>{item.existencia}</TableCell>
@@ -298,7 +298,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
           </TableBody>
         </Table>
         <ShoppingCart
-          addedProducts={addedProducts.map((product) => ({
+          addedProducts={addedProducts.map(product => ({
             id: product.id.toString(),
             modelo: product.modelo,
             ano: product.ano.toString(),
@@ -317,7 +317,7 @@ const ProductTable: React.FC<ProductTableProps> = () => {
           onOpenChange={onOpenChange}
         >
           <ModalContent>
-            {(onClose) => (
+            {onClose => (
               <>
                 <ModalHeader className="flex flex-col gap-1">
                   Semejantes
@@ -347,9 +347,9 @@ const ProductTable: React.FC<ProductTableProps> = () => {
                             <TableCell>{data.marca}</TableCell>
                             <TableCell>{data.existencia}</TableCell>
                             <TableCell>
-                              {new Intl.NumberFormat("en-US", {
-                                style: "currency",
-                                currency: "CLP",
+                              {new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'CLP',
                               }).format(data.precio1)}
                             </TableCell>
                             <TableCell>
