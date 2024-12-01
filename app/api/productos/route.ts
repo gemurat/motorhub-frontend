@@ -17,7 +17,8 @@ export async function GET(request: Request) {
       producto."Moneda",
       producto."Existencia",
       producto."CodigoParte" AS "CodigoProveedor",
-      producto."CodigoOriginal"
+      producto."CodigoOriginal",
+	    marcaProducto."Marca" AS "MarcaProducto" 
       FROM "TblCat_Semejantes" AS semejante
       LEFT JOIN "TblCat_Productos" AS producto
       ON semejante."Producto" = producto."Id"
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
         Existencia: number
         CodigoProveedor: string
         CodigoOriginal: string
+        MarcaProducto: string
       }) => ({
         id: row.Id,
         modelo: row.Modelo,
@@ -50,9 +52,9 @@ export async function GET(request: Request) {
         marca: row.Marca,
         precio1: row.Precio1,
         measurements: row.Medidas,
-        // currency: row.Moneda,
         supplierCode: row.CodigoProveedor,
         originalCode: row.CodigoOriginal,
+        marcaProducto: row.MarcaProducto,
       })
     )
 

@@ -26,6 +26,7 @@ interface Product {
   measurements: string
   supplierCode: string
   originalCode: string
+  marcaProducto: string
 }
 
 type Data = {
@@ -39,6 +40,7 @@ type Data = {
   existencia: number
   supplierCode: string
   originalCode: string
+  marcaProducto: string
 }
 
 const TableNew = () => {
@@ -53,16 +55,40 @@ const TableNew = () => {
 
   const columns = useMemo<MRT_ColumnDef<Data>[]>(
     () => [
-      { accessorKey: "id", header: "Parte" },
-      { accessorKey: "parte", header: "Parte" },
-      { accessorKey: "measurements", header: "Medidas" },
-      { accessorKey: "marca", header: "Marca" },
-      { accessorKey: "modelo", header: "Modelo" },
-      { accessorKey: "ano", header: "Año" },
-      { accessorKey: "precio1", header: "Precio" },
-      { accessorKey: "existencia", header: "Existencia" },
-      { accessorKey: "supplierCode", header: "Codigo Proveedor" },
-      { accessorKey: "originalCode", header: "Codigo Original" },
+      {
+        id: "agregar",
+        header: "Agregar",
+        columnDefType: "display",
+        size: 70,
+        Cell: ({ row }) => (
+          <Button>
+            <PlusIcon />
+          </Button>
+        ),
+      },
+      { accessorKey: "id", header: "Cod. Interno", size: 60 },
+      { accessorKey: "parte", header: "Desc. Producto", size: 280 },
+      { accessorKey: "measurements", header: "Medidas", size: 200 },
+      { accessorKey: "marca", header: "Marca", size: 80 },
+      { accessorKey: "modelo", header: "Modelo", size: 170 },
+      { accessorKey: "ano", header: "Año", size: 80 },
+      {
+        accessorKey: "precio1",
+        header: "Precio",
+        size: 60,
+        Cell: ({ cell }) => (
+          <span>
+            {new Intl.NumberFormat("es-CL", {
+              style: "currency",
+              currency: "CLP",
+            }).format(cell.getValue<number>())}
+          </span>
+        ),
+      },
+      { accessorKey: "existencia", header: "Existencia", size: 10 },
+      { accessorKey: "supplierCode", header: "Codigo Proveedor", size: 80 },
+      { accessorKey: "originalCode", header: "Codigo Original", size: 80 },
+      { accessorKey: "marcaProducto", header: "Marca Producto", size: 80 },
     ],
     []
   )
@@ -190,6 +216,7 @@ const TableNew = () => {
       existencia: product.existencia,
       supplierCode: product.supplierCode,
       originalCode: product.originalCode,
+      marcaProducto: product.marcaProducto,
     }))
   }, [filteredProducts])
 
@@ -203,17 +230,14 @@ const TableNew = () => {
     enableColumnFilters: false,
     initialState: { density: "compact" },
     displayColumnDefOptions: { "mrt-row-actions": { size: 80 } },
-    enableRowActions: true,
-    renderRowActions: ({ row }) => (
-      <Box>
-        <Button>
-          <PlusIcon />
-        </Button>
-      </Box>
-    ),
     muiTableBodyCellProps: {
       sx: {
         borderRight: "1px solid #e0e0e0",
+        fontWeight: "normal",
+        fontSize: "11px",
+        textWrap: "nowrap",
+        whiteSpace: "wrap",
+        maxHeight: "50px",
       },
     },
   })

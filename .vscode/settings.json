@@ -1,6 +1,7 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
+    "Agregar",
     "Buscar",
     "cantidad",
     "categoria",
@@ -27,6 +28,7 @@
     "Porcentaje",
     "Precio",
     "Prefijo",
+    "Producto",
     "Productos",
     "produts",
     "Proveedor",
