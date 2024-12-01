@@ -1,6 +1,6 @@
-"use client"
-import React, { useState } from "react"
-import LazySelect from "./LazySelect"
+'use client'
+import React, { useState } from 'react'
+// import LazySelect from "./LazySelect"
 
 type FilterVal = {
   id: number
@@ -22,17 +22,17 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 
   const handleSelect = (selected: FilterVal) => {
     setSelectedValue(selected)
-    console.log("Selected value:", selected)
+    console.log('Selected value:', selected)
   }
 
   return (
     <div className="flex flex-wrap md:flex-nowrap gap-4">
-      <LazySelect
+      {/* <LazySelect
         label={label}
         placeholder={placeholder}
         filterVal={filterVal}
         onSelect={handleSelect}
-      />
+      /> */}
     </div>
   )
 }
