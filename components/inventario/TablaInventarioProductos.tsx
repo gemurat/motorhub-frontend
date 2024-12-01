@@ -1,6 +1,6 @@
-"use client"
-import React, { useState, useMemo } from "react"
-import { PlusIcon } from "@/public/plusIcon"
+'use client'
+import React, { useState, useMemo } from 'react'
+import { PlusIcon } from '@/public/plusIcon'
 import {
   Table,
   TableHeader,
@@ -11,10 +11,10 @@ import {
   Pagination,
   getKeyValue,
   Input,
-} from "@nextui-org/react"
-import LazySelect from "../ventas/LazySelect"
-import ShoppingCart from "../ventas/ShoppingCart"
-import { SearchIcon } from "@/public/searchIcon"
+} from '@nextui-org/react'
+// import LazySelect from "../ventas/LazySelect"
+import ShoppingCart from '../ventas/ShoppingCart'
+import { SearchIcon } from '@/public/searchIcon'
 
 interface Product {
   marcaid: any
@@ -47,7 +47,7 @@ const TablaInventarioProductos: React.FC<ProductTableProps> = ({
   products,
   isShoppingCart = true,
 }) => {
-  const [filterValue, setFilterValue] = React.useState("")
+  const [filterValue, setFilterValue] = React.useState('')
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
   const handleAddProduct = (product: Product) => {
     setAddedProducts((prevProducts) => {
@@ -75,11 +75,11 @@ const TablaInventarioProductos: React.FC<ProductTableProps> = ({
       setFilterValue(value)
       setPage(1)
     } else {
-      setFilterValue("")
+      setFilterValue('')
     }
   }, [])
   const onClear = React.useCallback(() => {
-    setFilterValue("")
+    setFilterValue('')
     setPage(1)
   }, [])
   const [page, setPage] = React.useState(1)
@@ -142,7 +142,7 @@ const TablaInventarioProductos: React.FC<ProductTableProps> = ({
           </div>
         }
         classNames={{
-          wrapper: "min-h-[550px]",
+          wrapper: 'min-h-[550px]',
         }}
       >
         <TableHeader>
@@ -159,16 +159,16 @@ const TablaInventarioProductos: React.FC<ProductTableProps> = ({
           {(item) => (
             <TableRow
               key={item.id}
-              className={`h-16 ${item.existencia === 0 ? "opacity-50" : ""}`}
+              className={`h-16 ${item.existencia === 0 ? 'opacity-50' : ''}`}
             >
               {(columnKey) => (
                 <TableCell>
-                  {columnKey === "precio1" ? (
-                    new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "CLP",
+                  {columnKey === 'precio1' ? (
+                    new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'CLP',
                     }).format(item[columnKey])
-                  ) : columnKey === "action" ? (
+                  ) : columnKey === 'action' ? (
                     <button
                       onClick={() => handleAddProduct(item)}
                       disabled={item.existencia === 0}
