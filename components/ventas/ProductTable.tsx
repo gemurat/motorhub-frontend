@@ -248,14 +248,14 @@ const ProductTable: React.FC<ProductTableProps> = () => {
           }}
         >
           <TableHeader>
-            <TableColumn key="id">ID</TableColumn>
-            <TableColumn key="modelo">Modelo</TableColumn>
-            <TableColumn key="ano">Año</TableColumn>
-            <TableColumn key="parte">Parte</TableColumn>
-            <TableColumn key="existencia">Existencia</TableColumn>
+            <TableColumn key="id">Parte</TableColumn>
             <TableColumn key="marca">Marca</TableColumn>
-            <TableColumn key="precio1">Precio</TableColumn>
+            <TableColumn key="modelo">Modelo</TableColumn>
             <TableColumn key="measurements">Medidas</TableColumn>
+            <TableColumn key="ano">Año</TableColumn>
+            <TableColumn key="precio1">Precio</TableColumn>
+            <TableColumn key="existencia">Existencia</TableColumn>
+            <TableColumn key="parte">Parte</TableColumn>
             <TableColumn key="supplierCode">Codigo Proveedor</TableColumn>
             <TableColumn key="originalCode">Codigo Original</TableColumn>
             <TableColumn key="action"> </TableColumn>
@@ -271,18 +271,18 @@ const ProductTable: React.FC<ProductTableProps> = () => {
                     {item.id}
                   </button>
                 </TableCell>
-                <TableCell>{item.modelo}</TableCell>
-                <TableCell>{item.ano}</TableCell>
-                <TableCell>{item.parte}</TableCell>
-                <TableCell>{item.existencia}</TableCell>
                 <TableCell>{item.marca}</TableCell>
+                <TableCell>{item.modelo}</TableCell>
+                <TableCell>{item.measurements}</TableCell>
+                <TableCell>{item.ano}</TableCell>
                 <TableCell>
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "CLP",
                   }).format(item.precio1)}
                 </TableCell>
-                <TableCell>{item.measurements}</TableCell>
+                <TableCell>{item.existencia}</TableCell>
+                <TableCell>{item.parte}</TableCell>
                 <TableCell>{item.supplierCode}</TableCell>
                 <TableCell>{item.originalCode}</TableCell>
                 <TableCell>
