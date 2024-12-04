@@ -1,9 +1,16 @@
-import { title } from "@/components/primitives";
+import TableNew from '@/components/ventas/TableNew'
+// import ProductTable from "@/components/ventas/ProductTable"
+// import { fetchProducts } from "../api/dataFetcher"
 
-export default function DocsPage() {
+const Ventas = async () => {
+  // const produts = await fetchProducts()
+
   return (
-    <div>
-      <h1 className={title()}>Docs</h1>
+    <div className="w-full">
+      {/* <ProductTable /> */}
+      <TableNew />
     </div>
-  );
+  )
 }
+
+export default Ventas

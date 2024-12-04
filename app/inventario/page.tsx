@@ -1,9 +1,4 @@
-import { title } from "@/components/primitives";
-
-export default function PricingPage() {
-  return (
-    <div>
-      <h1 className={title()}>Pricing</h1>
-    </div>
-  );
+const PricingPage = () => {
+  return <div className="w-full">{/* Empty template */}</div>
 }
+export default PricingPage
