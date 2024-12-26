@@ -1,3 +1,4 @@
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import TableNew from '@/components/ventas/TableNew'
 // import ProductTable from "@/components/ventas/ProductTable"
 // import { fetchProducts } from "../api/dataFetcher"
@@ -13,4 +14,4 @@ const Ventas = async () => {
   )
 }
 
-export default Ventas
+export default withPageAuthRequired(Ventas)

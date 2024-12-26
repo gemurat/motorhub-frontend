@@ -1,9 +1,11 @@
-import { title } from "@/components/primitives";
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 
-export default function BlogPage() {
+async function Finanzas() {
   return (
     <div>
-      <h1 className={title()}>Blog</h1>
+      <h1>Finanzas</h1>
     </div>
-  );
+  )
 }
+
+export default withPageAuthRequired(Finanzas)

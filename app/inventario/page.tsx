@@ -1,4 +1,10 @@
-const PricingPage = () => {
-  return <div className="w-full">{/* Empty template */}</div>
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+
+async function PricingPage() {
+  return (
+    <div>
+      <h1>Inventario</h1>
+    </div>
+  )
 }
-export default PricingPage
+export default withPageAuthRequired(PricingPage)

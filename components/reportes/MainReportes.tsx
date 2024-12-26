@@ -1,47 +1,42 @@
-"use client"
-
-import { DonutChart } from "../DonutChart"
+// import { DonutChart } from "../DonutChart"
 
 const chartdata = [
   {
-    name: "SolarCells",
+    name: 'SolarCells',
     amount: 4890,
   },
   {
-    name: "Glass",
+    name: 'Glass',
     amount: 2103,
   },
   {
-    name: "JunctionBox",
+    name: 'JunctionBox',
     amount: 2050,
   },
   {
-    name: "Adhesive",
+    name: 'Adhesive',
     amount: 1300,
   },
   {
-    name: "BackSheet",
+    name: 'BackSheet',
     amount: 1100,
   },
   {
-    name: "Frame",
+    name: 'Frame',
     amount: 700,
   },
   {
-    name: "Encapsulant",
+    name: 'Encapsulant',
     amount: 200,
   },
 ]
 
 export const DonutChartLabelExample = () => (
-  <DonutChart
-    className="mx-auto"
-    data={chartdata}
-    category="name"
-    value="amount"
-    showLabel={true}
-    valueFormatter={(number: number) =>
-      `$${Intl.NumberFormat("us").format(number).toString()}`
-    }
-  />
+  <div>
+    <h2>Component Usage</h2>
+    <p>
+      This is an example of how to use the DonutChart component with labels.
+    </p>
+    {/* <DonutChart data={chartdata} /> */}
+  </div>
 )
