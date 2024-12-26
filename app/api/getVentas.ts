@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { query } from "../../db"
+import { NextApiRequest, NextApiResponse } from 'next'
+import { query } from '../../db'
 
 export async function getVentas(startDate?: string, endDate?: string) {
   try {
@@ -22,10 +22,10 @@ export async function getVentas(startDate?: string, endDate?: string) {
     } else {
       result = await query('SELECT * FROM "TblCtrl_SaldosVentas"')
     }
-    console.log("result", result.rows)
+    console.log('result', result.rows)
     // return result.rows
   } catch (error) {
-    console.error("Error fetching data from PostgreSQL:", error)
-    throw new Error("Internal Server Error")
+    console.error('Error fetching data from PostgreSQL:', error)
+    throw new Error('Internal Server Error')
   }
 }
