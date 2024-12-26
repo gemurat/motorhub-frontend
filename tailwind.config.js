@@ -1,7 +1,8 @@
 import { nextui } from '@nextui-org/theme'
+import forms from '@tailwindcss/forms'
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   content: [
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,7 +10,8 @@ module.exports = {
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {},
-  plugins: [require('@tailwindcss/forms')],
   darkMode: 'class',
-  plugins: [nextui()],
+  plugins: [forms, nextui()],
 }
+
+export default config
