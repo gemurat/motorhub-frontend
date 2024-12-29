@@ -1,6 +1,5 @@
 export default function Home() {
   const redirectUri = encodeURIComponent('/inicio')
-
   return (
     <section className="flex flex-col md:flex-row items-center justify-center gap-8 py-12 md:py-16 bg-gradient-to-r from-light-500 to-gray-100 dark:from-dark-800 dark:to-gray-900 min-h-screen relative overflow-hidden">
       <div className="text-center md:text-left md:w-1/2 p-8 relative z-10">

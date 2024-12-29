@@ -179,7 +179,7 @@ const TableNew = () => {
           searchableText.includes(part)
         )
         const matchesId = idQuery
-          ? product.id?.toLowerCase().includes(idQuery.toLowerCase())
+          ? product.id?.toLowerCase() === idQuery.toLowerCase()
           : true
         return matchesQuery && matchesId
       })
