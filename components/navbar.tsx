@@ -8,27 +8,17 @@ import {
 import { link as linkStyles } from '@nextui-org/theme'
 import NextLink from 'next/link'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Logo } from '@/components/icons'
 import Logout from '@/app/logout'
-import { getSession } from '@auth0/nextjs-auth0'
-import { Claims } from '@auth0/nextjs-auth0'
 
 const Navbar = () => {
-  const [user, setUser] = useState<Claims | null>(null)
+  const { user, error, isLoading } = useUser()
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      const session = await getSession()
-      if (session?.user) {
-        setUser(session.user)
-      }
-    }
-
-    fetchSession()
-  }, [])
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>{error.message}</div>
 
   return (
     <NextUINavbar maxWidth="xl" position="sticky">
@@ -46,6 +36,14 @@ const Navbar = () => {
           <NavbarItem>
             <NextLink href="/ventas" className={clsx(linkStyles(), 'text-sm')}>
               Ventas
+            </NextLink>
+          </NavbarItem>
+          <NavbarItem>
+            <NextLink
+              href="/inventario"
+              className={clsx(linkStyles(), 'text-sm')}
+            >
+              Inventario
             </NextLink>
           </NavbarItem>
           <NavbarItem>
