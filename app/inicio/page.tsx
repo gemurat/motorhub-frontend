@@ -18,6 +18,7 @@ async function Home() {
           {user?.name || 'Invitado'} Navega hacia el modulo que necesites.
         </h2>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h3 className="text-2xl font-semibold">Ventas</h3>
