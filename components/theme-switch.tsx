@@ -25,41 +25,40 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     theme === 'light' ? setTheme('dark') : setTheme('light')
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      onChange()
+    }
+  }
+
   const {
     Component: SwitchComponent,
     slots,
     isSelected,
     getBaseProps,
     getInputProps,
-    getWrapperProps,
   } = useSwitch({
-    isSelected: theme === 'light' || isSSR,
-    'aria-label': `Switch to ${theme === 'light' || isSSR ? 'dark' : 'light'} mode`,
+    isSelected: theme === 'dark',
     onChange,
   })
 
+  if (isSSR) return null
+
   return (
     <div
-      {...getBaseProps({
-        className: clsx(
-          'px-px transition-opacity hover:opacity-80 cursor-pointer',
-          className,
-          classNames?.base
-        ),
-      })}
+      role="switch"
+      tabIndex={0}
+      aria-checked={theme === 'dark'}
       onClick={onChange}
+      onKeyDown={handleKeyDown}
+      className={clsx('theme-switch', className)}
     >
       <VisuallyHidden>
         <input {...getInputProps()} />
       </VisuallyHidden>
-      <div
-        {...getWrapperProps()}
-        className={slots.wrapper({
-          class: clsx('flex items-center justify-center', classNames?.wrapper),
-        })}
-      >
-        {isSelected ? <SunFilledIcon /> : <MoonFilledIcon />}
-      </div>
+      <SwitchComponent {...getBaseProps()} className={classNames?.base}>
+        {isSelected ? <MoonFilledIcon /> : <SunFilledIcon />}
+      </SwitchComponent>
     </div>
   )
 }
