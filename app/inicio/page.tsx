@@ -12,7 +12,13 @@ async function Home() {
   }
   const user = session?.user
   const roleUser = await userRole()
-
+  console.log(roleUser)
+  if (roleUser === 'caja') {
+    redirect('/caja')
+  }
+  if (roleUser === 'vendedor') {
+    redirect('/ventas')
+  }
   return (
     <section className="flex flex-col items-center justify-center gap-8 py-12 md:py-16">
       <div className="inline-block max-w-xl text-center">
