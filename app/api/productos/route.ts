@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { query } from "@/db"
+import { NextResponse } from 'next/server'
+import { query } from '@/db'
 
 export async function GET(request: Request) {
   //   const semejanteId = searchParams.get("semejanteId")
@@ -60,9 +60,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(processedResult)
   } catch (error) {
-    console.error("Error fetching data from PostgreSQL:", error)
+    console.error('Error fetching data from PostgreSQL:', error)
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: 'Internal Server Error' },
       { status: 500 }
     )
   }

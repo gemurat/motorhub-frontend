@@ -1,8 +1,8 @@
-import { getBrand } from "./getBrand"
-import { getCategory } from "./getCategory"
-import { getModels } from "./getModel"
-import { getProducts } from "./getProducts"
-import { getVentas } from "./getVentas"
+import { getBrand } from './getBrand'
+import { getCategory } from './getCategory'
+import { getModels } from './getModel'
+// import { getProducts } from "./getProducts"
+import { getVentas } from './getVentas'
 
 export const fetchBrands = async () => {
   return await getBrand()

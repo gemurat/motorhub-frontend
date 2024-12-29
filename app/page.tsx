@@ -1,82 +1,29 @@
-import { Link } from "@nextui-org/link"
-import { Snippet } from "@nextui-org/snippet"
-import { Code } from "@nextui-org/code"
-import { button as buttonStyles } from "@nextui-org/theme"
-
-import { siteConfig } from "@/config/site"
-import { title, subtitle } from "@/components/primitives"
-import { GithubIcon } from "@/components/icons"
+import Login from './login'
 
 export default function Home() {
-  return (
-    <section className="flex flex-col items-center justify-center gap-8 py-12 md:py-16">
-      <div className="inline-block max-w-xl text-center">
-        <h1 className={title()}>Bienvenido!</h1>
-        <h2 className={subtitle({ class: "mt-4" })}>
-          Navega hacia el modulo que necesites.
-        </h2>
-      </div>
+  const redirectUri = encodeURIComponent('http://localhost:3000/inicio')
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h3 className="text-2xl font-semibold">Ventas</h3>
-          <p className="mt-4 text-base">Manage and track your sales data.</p>
-          <Link
-            className={buttonStyles({
-              color: "primary",
-              radius: "full",
-              variant: "shadow",
-              class: "mt-6",
-            })}
-            href="/ventas"
-          >
-            Go to Ventas
-          </Link>
-        </div>
-        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h3 className="text-2xl font-semibold">Reportes</h3>
-          <p className="mt-4 text-base">Generate and view detailed reports.</p>
-          <Link
-            className={buttonStyles({
-              variant: "bordered",
-              radius: "full",
-              class: "mt-6",
-            })}
-            href="/reportes"
-          >
-            Go to Reportes
-          </Link>
-        </div>
-        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h3 className="text-2xl font-semibold">Inventario</h3>
-          <p className="mt-4 text-base">Keep track of your inventory levels.</p>
-          <Link
-            className={buttonStyles({
-              variant: "bordered",
-              radius: "full",
-              class: "mt-6",
-            })}
-            href="/inventario"
-          >
-            Go to Inventario
-          </Link>
-        </div>
-        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h3 className="text-2xl font-semibold">Finanzas</h3>
-          <p className="mt-4 text-base">
-            Manage your financial data and transactions.
-          </p>
-          <Link
-            className={buttonStyles({
-              variant: "bordered",
-              radius: "full",
-              class: "mt-6",
-            })}
-            href="/finanzas"
-          >
-            Go to Finanzas
-          </Link>
-        </div>
+  return (
+    <section className="flex flex-col md:flex-row items-center justify-center gap-8 py-12 md:py-16 bg-gradient-to-r from-light-500 to-gray-100 dark:from-dark-800 dark:to-gray-900 min-h-screen relative overflow-hidden">
+      <div className="text-center md:text-left md:w-1/2 p-8 relative z-10">
+        <h1 className="text-5xl font-bold text-light-900 dark:text-dark-100 mb-4">
+          Bienvedino a MotorHub
+        </h1>
+        <p className="text-xl text-light-900 dark:text-dark-300 mb-6">
+          Tu All-in-one para la gestión de tu local
+        </p>
+        <ul className="list-disc list-inside text-light-900 dark:text-dark-300 space-y-2"></ul>
+      </div>
+      <div className="flex flex-col items-center justify-center bg-light-100 dark:bg-dark-800 p-8 rounded-lg shadow-lg md:w-1/3 h-96 relative z-10">
+        <h2 className="text-3xl font-semibold mb-4 dark:text-dark-100">
+          Inicia sesión con Auth0
+        </h2>
+        <a
+          href={`/api/auth/login?returnTo=${redirectUri}`}
+          className="px-8 py-4 text-xl font-semibold text-light-100 bg-light-600 dark:bg-dark-700 rounded-lg shadow-lg hover:bg-light-700 dark:hover:bg-dark-800 focus:outline-none focus:ring-2 focus:ring-light-500 focus:ring-opacity-75 transition duration-300 ease-in-out"
+        >
+          Login
+        </a>
       </div>
     </section>
   )

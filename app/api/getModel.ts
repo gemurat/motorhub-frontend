@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { query } from "../../db"
+import { NextApiRequest, NextApiResponse } from 'next'
+import { query } from '../../db'
 
 export async function getModels() {
   try {
@@ -15,7 +15,7 @@ export async function getModels() {
 
     return processedResult
   } catch (error) {
-    console.error("Error fetching data from PostgreSQL:", error)
-    throw new Error("Internal Server Error")
+    console.error('Error fetching data from PostgreSQL:', error)
+    throw new Error('Internal Server Error')
   }
 }
