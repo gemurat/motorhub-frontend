@@ -4,18 +4,21 @@ import { title, subtitle } from '@/components/primitives'
 import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import { getSession } from '@auth0/nextjs-auth0'
 import { redirect } from 'next/navigation'
+import { userRole } from '@/actions/userRole'
 async function Home() {
   const session = await getSession()
   if (!session) {
     return redirect('/error')
   }
   const user = session?.user
+  const roleUser = await userRole()
+
   return (
     <section className="flex flex-col items-center justify-center gap-8 py-12 md:py-16">
       <div className="inline-block max-w-xl text-center">
         <h1 className={title()}>Bienvenido!</h1>
         <h2 className={subtitle({ class: 'mt-4' })}>
-          {user?.name || 'Invitado'} Navega hacia el modulo que necesites.
+          {user?.name || 'Invitado'} Navega hacia el modulo que necesites.{' '}
         </h2>
       </div>
 
@@ -49,36 +52,42 @@ async function Home() {
             Go to Reportes
           </Link>
         </div>
-        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h3 className="text-2xl font-semibold">Inventario</h3>
-          <p className="mt-4 text-base">Keep track of your inventory levels.</p>
-          <Link
-            className={buttonStyles({
-              variant: 'bordered',
-              radius: 'full',
-              class: 'mt-6',
-            })}
-            href="/inventario"
-          >
-            Go to Inventario
-          </Link>
-        </div>
-        <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h3 className="text-2xl font-semibold">Finanzas</h3>
-          <p className="mt-4 text-base">
-            Manage your financial data and transactions.
-          </p>
-          <Link
-            className={buttonStyles({
-              variant: 'bordered',
-              radius: 'full',
-              class: 'mt-6',
-            })}
-            href="/finanzas"
-          >
-            Go to Finanzas
-          </Link>
-        </div>
+        {roleUser === 'admin' && (
+          <>
+            <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-2xl font-semibold">Inventario</h3>
+              <p className="mt-4 text-base">
+                Keep track of your inventory levels.
+              </p>
+              <Link
+                className={buttonStyles({
+                  variant: 'bordered',
+                  radius: 'full',
+                  class: 'mt-6',
+                })}
+                href="/inventario"
+              >
+                Go to Inventario
+              </Link>
+            </div>
+            <div className="p-8 h-56 border rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-2xl font-semibold">Finanzas</h3>
+              <p className="mt-4 text-base">
+                Manage your financial data and transactions.
+              </p>
+              <Link
+                className={buttonStyles({
+                  variant: 'bordered',
+                  radius: 'full',
+                  class: 'mt-6',
+                })}
+                href="/finanzas"
+              >
+                Go to Finanzas
+              </Link>
+            </div>
+          </>
+        )}
       </div>
     </section>
   )
