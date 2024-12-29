@@ -24,7 +24,7 @@ async function Home() {
       <div className="inline-block max-w-xl text-center">
         <h1 className={title()}>Bienvenido!</h1>
         <h2 className={subtitle({ class: 'mt-4' })}>
-          {user?.name || 'Invitado'} Navega hacia el modulo que necesites.{' '}
+          {user?.name || 'Invitado'} Navega hacia el modulo que necesites.
         </h2>
       </div>
 
