@@ -297,86 +297,13 @@
 //             ))}
 //           </TableBody>
 //         </Table>
-//         <ShoppingCart
-//           addedProducts={addedProducts.map(product => ({
-//             id: product.id.toString(),
-//             modelo: product.modelo,
-//             ano: product.ano.toString(),
-//             parte: product.parte,
-//             marca: product.marca,
-//             existencia: product.existencia.toString(),
-//             precio1: product.precio1,
-//             cantidad: product.cantidad ?? 0,
-//           }))}
-//           removeProduct={handleRemoveProduct}
-//         />
+
 //         <Modal
 //           scrollBehavior="inside"
 //           size="5xl"
 //           isOpen={isOpen}
 //           onOpenChange={onOpenChange}
 //         >
-//           <ModalContent>
-//             {onClose => (
-//               <>
-//                 <ModalHeader className="flex flex-col gap-1">
-//                   Semejantes
-//                 </ModalHeader>
-//                 <ModalBody>
-//                   {loading ? (
-//                     <div>Loading...</div>
-//                   ) : semejanteData.length > 0 ? (
-//                     <Table aria-label="Semejante data table">
-//                       <TableHeader>
-//                         <TableColumn>ID</TableColumn>
-//                         <TableColumn>Modelo</TableColumn>
-//                         <TableColumn>Año</TableColumn>
-//                         <TableColumn>Parte</TableColumn>
-//                         <TableColumn>Marca</TableColumn>
-//                         <TableColumn>Existencia</TableColumn>
-//                         <TableColumn>Precio</TableColumn>
-//                         <TableColumn> </TableColumn>
-//                       </TableHeader>
-//                       <TableBody>
-//                         {semejanteData.map((data: any, index: number) => (
-//                           <TableRow key={`${data.id}-${index}`}>
-//                             <TableCell>{data.id}</TableCell>
-//                             <TableCell>{data.modelo}</TableCell>
-//                             <TableCell>{data.ano}</TableCell>
-//                             <TableCell>{data.parte}</TableCell>
-//                             <TableCell>{data.marca}</TableCell>
-//                             <TableCell>{data.existencia}</TableCell>
-//                             <TableCell>
-//                               {new Intl.NumberFormat('en-US', {
-//                                 style: 'currency',
-//                                 currency: 'CLP',
-//                               }).format(data.precio1)}
-//                             </TableCell>
-//                             <TableCell>
-//                               <button
-//                                 onClick={() => handleAddProduct(data)}
-//                                 disabled={data.existencia === 0}
-//                               >
-//                                 <PlusIcon />
-//                               </button>
-//                             </TableCell>
-//                           </TableRow>
-//                         ))}
-//                       </TableBody>
-//                     </Table>
-//                   ) : (
-//                     <div>Sim Semejantes Disponibles</div>
-//                   )}
-//                 </ModalBody>
-//                 <ModalFooter>
-//                   <Button color="danger" variant="light" onPress={onClose}>
-//                     Cerrar
-//                   </Button>
-//                 </ModalFooter>
-//               </>
-//             )}
-//           </ModalContent>
-//         </Modal>
 //       </div>
 //     )
 //   )

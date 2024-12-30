@@ -9,7 +9,8 @@ import {
 import { Input, useDisclosure } from '@nextui-org/react'
 import { SearchIcon } from '../icons'
 import { PlusIcon } from '@/public/plusIcon'
-import { Box, Button } from '@mui/material'
+import { Button } from '@mui/material'
+import ShoppingCart from './ShoppingCart'
 
 interface Product {
   marcaid: any
@@ -42,14 +43,16 @@ type Data = {
   supplierCode: string
   originalCode: string
   marcaProducto: string
+  marcaid: any
+  modeloid: any
+  familiaid: any
+  moneda: string
 }
 
 const TableNew = () => {
   const [products, setProducts] = useState<Product[]>([])
-  const [semejantes, setSemejantes] = useState<any>([])
   const [semejanteData, setSemejanteData] = useState<any>([])
   const [filterValue, setFilterValue] = useState('')
-  const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const [addedProducts, setAddedProducts] = useState<Product[]>([])
   const [idFilterValue, setIdFilterValue] = useState('')
   const [loading, setLoading] = useState(false)
@@ -62,7 +65,7 @@ const TableNew = () => {
         columnDefType: 'display',
         size: 70,
         Cell: ({ row }) => (
-          <Button>
+          <Button onClick={() => handleAddProduct(row.original)}>
             <PlusIcon />
           </Button>
         ),
@@ -133,34 +136,6 @@ const TableNew = () => {
     fetchProducts()
   }, [])
 
-  useEffect(() => {
-    const fetchSemejanteData = async () => {
-      if (semejantes.length > 0) {
-        setLoading(true)
-        try {
-          const response = await fetch(
-            `api/semejantes?semejanteId=${semejantes}`
-          )
-          const data = await response.json()
-          setSemejanteData(data)
-        } catch (error) {
-          console.error('Error fetching semejante data:', error)
-        } finally {
-          setLoading(false)
-        }
-      }
-    }
-    fetchSemejanteData()
-  }, [semejantes])
-
-  const handleFetchSemejante = useCallback(
-    (id: string) => {
-      setSemejantes(id)
-      onOpen()
-    },
-    [onOpen]
-  )
-
   const onClear = useCallback(() => {
     setFilterValue('')
   }, [])
@@ -174,7 +149,7 @@ const TableNew = () => {
       const queryParts: string[] = normalizeQuery(query)
       return products.filter((product: Product) => {
         const searchableText: string =
-          `${product.modelo} ${product.parte} ${product.marca} ${product.supplierCode} ${product.originalCode}`.toLowerCase()
+          `${product.modelo} ${product.parte} ${product.measurements} ${product.marca} ${product.supplierCode} ${product.originalCode}`.toLowerCase()
         const matchesQuery = queryParts.every((part) =>
           searchableText.includes(part)
         )
@@ -218,6 +193,10 @@ const TableNew = () => {
       supplierCode: product.supplierCode,
       originalCode: product.originalCode,
       marcaProducto: product.marcaProducto,
+      marcaid: product.marcaid,
+      modeloid: product.modeloid,
+      familiaid: product.familiaid,
+      moneda: product.moneda,
     }))
   }, [filteredProducts])
 
@@ -269,6 +248,19 @@ const TableNew = () => {
         />
       </div>
       <MaterialReactTable table={table} />
+      <ShoppingCart
+        addedProducts={addedProducts.map((product) => ({
+          id: product.id.toString(),
+          modelo: product.modelo,
+          ano: product.ano.toString(),
+          parte: product.parte,
+          marca: product.marca,
+          existencia: product.existencia.toString(),
+          precio1: product.precio1,
+          cantidad: product.cantidad ?? 0,
+        }))}
+        removeProduct={handleRemoveProduct}
+      />
     </>
   )
 }
