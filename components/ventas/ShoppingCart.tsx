@@ -21,7 +21,7 @@ interface ShoppingCartProps {
     cantidad: number
   }>
   removeProduct: (id: string) => void
-  removeAllProducts: () => void
+  removeAllProducts?: () => void
 }
 
 const getKeyValue = (item: any, key: string) => {

@@ -26,6 +26,7 @@ interface Product {
   parte: string
   marca: string
   existencia: number
+  measurements: string
   precio1: number
   moneda: string
   cantidad?: number
@@ -193,6 +194,7 @@ const TablaInventarioProductos: React.FC<ProductTableProps> = ({
             parte: product.parte,
             marca: product.marca,
             existencia: product.existencia.toString(),
+            measurements: product.measurements,
             precio1: product.precio1,
             cantidad: product.cantidad ?? 0,
           }))}
