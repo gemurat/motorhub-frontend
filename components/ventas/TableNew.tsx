@@ -279,9 +279,9 @@ const TableNew = () => {
           modelo: product.modelo,
           ano: product.ano.toString(),
           parte: product.parte,
-          measurements: product.measurements,
           marca: product.marca,
           existencia: product.existencia.toString(),
+          measurements: product.measurements,
           precio1: product.precio1,
           cantidad: product.cantidad ?? 0,
         }))}
