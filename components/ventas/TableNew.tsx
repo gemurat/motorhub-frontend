@@ -98,11 +98,34 @@ const TableNew = () => {
   )
 
   const handleAddProduct = useCallback((product: Product) => {
+    console.log(product)
+
     setAddedProducts((prevProducts) => {
-      const existingProduct = prevProducts.find((p) => p.id === product.id)
+      const existingProduct = prevProducts.find(
+        (p) =>
+          p.id === product.id &&
+          p.parte === product.parte &&
+          p.modelo === product.modelo &&
+          p.marca === product.marca &&
+          p.measurements === product.measurements &&
+          p.ano === product.ano &&
+          p.supplierCode === product.supplierCode &&
+          p.originalCode === product.originalCode &&
+          p.marcaProducto === product.marcaProducto
+      )
       if (existingProduct) {
         return prevProducts.map((p) =>
-          p.id === product.id ? { ...p, cantidad: (p.cantidad || 1) + 1 } : p
+          p.id === product.id &&
+          p.parte === product.parte &&
+          p.modelo === product.modelo &&
+          p.marca === product.marca &&
+          p.measurements === product.measurements &&
+          p.ano === product.ano &&
+          p.supplierCode === product.supplierCode &&
+          p.originalCode === product.originalCode &&
+          p.marcaProducto === product.marcaProducto
+            ? { ...p, cantidad: (p.cantidad || 1) + 1 }
+            : p
         )
       } else {
         return [...prevProducts, { ...product, cantidad: 1 }]
@@ -119,7 +142,9 @@ const TableNew = () => {
         .filter((p) => p.cantidad !== 0)
     )
   }, [])
-
+  const handleRemoveAllProducts = useCallback(() => {
+    setAddedProducts([])
+  }, [])
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
@@ -254,12 +279,14 @@ const TableNew = () => {
           modelo: product.modelo,
           ano: product.ano.toString(),
           parte: product.parte,
+          measurements: product.measurements,
           marca: product.marca,
           existencia: product.existencia.toString(),
           precio1: product.precio1,
           cantidad: product.cantidad ?? 0,
         }))}
         removeProduct={handleRemoveProduct}
+        removeAllProducts={handleRemoveAllProducts}
       />
     </>
   )
