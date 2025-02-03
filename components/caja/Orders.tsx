@@ -4,6 +4,7 @@ import { Card, CardHeader, CardBody, Divider, Button } from '@nextui-org/react'
 import Sidebar from './Sidebar'
 import CashBox from './CashBox'
 import EmployeeSells from './EmployeeSells'
+import PedidosLocal from './PedidosLocal'
 
 interface PaymentMethod {
   id: number
@@ -73,10 +74,41 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [transactionType, setTransactionType] =
     useState<TransactionType | null>(null)
   const [isCajaChicaVisible, setIsCajaChicaVisible] = useState(false)
+  const [isEmployeeSellsVisible, setIsEmployeeSellsVisible] = useState(false)
+  interface EmployeeSell {
+    seller_id: string
+    seller_name: string
+    total_amount: number
+  }
+
+  const [employeeSells, setEmployeeSells] = useState<EmployeeSell[]>([])
+  const handleEmployeeSellsVisible = () => {
+    setIsEmployeeSellsVisible(!isEmployeeSellsVisible)
+  }
+  const sellsByEmployee = async () => {
+    try {
+      const response = await fetch('/api/employee-sells', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      if (!response.ok) {
+        throw new Error('caja chica failed')
+      }
+      const result = await response.json()
+      setEmployeeSells(result)
+      // Handle successful payment processing (e.g., show a success message, update UI)
+    } catch (error) {
+      console.error('Error Caja chica:', error)
+      // Handle error in payment processing (e.g., show an error
+    }
+  }
 
   useEffect(() => {
     cajaChica()
     getOrders()
+    sellsByEmployee()
   }, [getOrders])
   // console.log(orders)
   const handleVolver = useCallback(() => {
@@ -120,7 +152,8 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
 
       // Call other post and get functions
       await cajaChica()
-
+      await sellsByEmployee()
+      // trigger update employeee sells from here
       // Handle successful payment processing (e.g., show a success message, update UI)
     } catch (error) {
       console.error('Error processing payment:', error)
@@ -260,10 +293,16 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
           />
         </div>
         <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
-          <EmployeeSells />
+          <EmployeeSells
+            isEmployeeSellsVisible={isEmployeeSellsVisible}
+            handleEmployeeSellsVisible={handleEmployeeSellsVisible}
+            employeeSells={employeeSells}
+            sellsByEmployee={sellsByEmployee}
+          />
         </div>
-        <div>Detalle Pedidos Local</div>
-        <div></div>
+        <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
+          <PedidosLocal />
+        </div>
       </div>
 
       <div className="w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-center">

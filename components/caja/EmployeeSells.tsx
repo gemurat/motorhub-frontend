@@ -9,46 +9,24 @@ import {
 } from '@nextui-org/react'
 import React, { useState } from 'react'
 
-const EmployeeSells = ({}: {}) => {
-  const [isEmployeeSellsVisible, setIsEmployeeSellsVisible] = useState(false)
-  interface EmployeeSell {
-    seller_id: string
-    seller_name: string
-    total_amount: number
-  }
-
-  const [employeeSells, setEmployeeSells] = useState<EmployeeSell[]>([])
-  const handleEmployeeSellsVisible = () => {
-    setIsEmployeeSellsVisible(!isEmployeeSellsVisible)
-  }
-  const sellsByEmployee = async () => {
-    try {
-      const response = await fetch('/api/employee-sells', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('caja chica failed')
-      }
-
-      const result = await response.json()
-      setEmployeeSells(result)
-      // Handle successful payment processing (e.g., show a success message, update UI)
-    } catch (error) {
-      console.error('Error Caja chica:', error)
-      // Handle error in payment processing (e.g., show an error
-    }
-  }
+const EmployeeSells = ({
+  isEmployeeSellsVisible,
+  handleEmployeeSellsVisible,
+  employeeSells,
+  sellsByEmployee,
+}: {
+  isEmployeeSellsVisible: boolean
+  handleEmployeeSellsVisible: () => void
+  employeeSells: any
+  sellsByEmployee: () => void
+}) => {
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">
         Resumen Ventas
       </h2>
       {!isEmployeeSellsVisible ? (
-        <Button onClick={handleEmployeeSellsVisible}>
+        <Button onClick={() => handleEmployeeSellsVisible()}>
           Ver Ventas por Empleado
         </Button>
       ) : (
@@ -56,7 +34,7 @@ const EmployeeSells = ({}: {}) => {
           <div className="text-sm font-medium">
             <div className="grid grid-cols-4 gap-3">
               <span className="col-span-2">Descripcion</span>
-              <span className="col-span-2">Precio</span>
+              <span className="col-span-2">Valor</span>
             </div>
           </div>
           <Divider />
