@@ -12,7 +12,7 @@ async function Home() {
   }
   const user = session?.user
   const roleUser = await userRole()
-  console.log(roleUser)
+  // console.log(roleUser)
   if (roleUser === 'caja') {
     redirect('/caja')
   }

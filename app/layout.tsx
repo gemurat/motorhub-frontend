@@ -47,7 +47,7 @@ export default function RootLayout({
                 {children}
               </main>
               <footer className="w-full flex items-center justify-center py-3">
-                Trabajo en progreso
+                Enero 2025
               </footer>
             </div>
           </Providers>
