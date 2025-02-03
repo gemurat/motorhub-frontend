@@ -153,7 +153,6 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       // Call other post and get functions
       await cajaChica()
       await sellsByEmployee()
-      // trigger update employeee sells from here
       // Handle successful payment processing (e.g., show a success message, update UI)
     } catch (error) {
       console.error('Error processing payment:', error)
@@ -297,11 +296,13 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
             isEmployeeSellsVisible={isEmployeeSellsVisible}
             handleEmployeeSellsVisible={handleEmployeeSellsVisible}
             employeeSells={employeeSells}
-            sellsByEmployee={sellsByEmployee}
+            sellsByEmployee={sellsByEmployee ?? []}
           />
         </div>
         <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
-          <PedidosLocal />
+          <PedidosLocal
+          // handleVolver={}
+          />
         </div>
       </div>
 
