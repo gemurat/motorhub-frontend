@@ -5,7 +5,15 @@ import Sidebar from './Sidebar'
 import CashBox from './CashBox'
 import EmployeeSells from './EmployeeSells'
 import PedidosLocal from './PedidosLocal'
-
+type Pedido = {
+  id: number
+  order_date: Date
+  supplier_id: number
+  vale: number
+  total_amount: number
+  status: string
+}
+type selectedPedido = Pedido | null
 interface PaymentMethod {
   id: number
   name: string
@@ -22,6 +30,7 @@ interface Order {
     quantity: number
   }[]
 }
+type estadoPedido = 'PENDING' | 'COMPLETED' | 'CANCELLED'
 type TransactionType = 'expense' | 'income'
 
 const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
@@ -75,11 +84,14 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
     useState<TransactionType | null>(null)
   const [isCajaChicaVisible, setIsCajaChicaVisible] = useState(false)
   const [isEmployeeSellsVisible, setIsEmployeeSellsVisible] = useState(false)
+  const [selectedPedido, setSelectedPedido] = useState<selectedPedido>(null)
+  const [pedidosLocalData, setPedidosLocalData] = useState<Pedido[]>([])
   interface EmployeeSell {
     seller_id: string
     seller_name: string
     total_amount: number
   }
+  const [nuevoEstadoPedido, setNuevoEstadoPedido] = useState('')
 
   const [employeeSells, setEmployeeSells] = useState<EmployeeSell[]>([])
   const handleEmployeeSellsVisible = () => {
@@ -104,11 +116,30 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       // Handle error in payment processing (e.g., show an error
     }
   }
-
+  const getPedidosLocal = async () => {
+    try {
+      const response = await fetch('/api/pedidos-caja', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      if (!response.ok) {
+        throw new Error('caja chica failed')
+      }
+      const result = await response.json()
+      setPedidosLocalData(result.response)
+      // Handle successful payment processing (e.g., show a success message, update UI)
+    } catch (error) {
+      console.error('Error Pedidos Caja:', error)
+      // Handle error in payment processing (e.g., show an error
+    }
+  }
   useEffect(() => {
     cajaChica()
     getOrders()
     sellsByEmployee()
+    getPedidosLocal()
   }, [getOrders])
   // console.log(orders)
   const handleVolver = useCallback(() => {
@@ -153,6 +184,7 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       // Call other post and get functions
       await cajaChica()
       await sellsByEmployee()
+      await getPedidosLocal()
       // Handle successful payment processing (e.g., show a success message, update UI)
     } catch (error) {
       console.error('Error processing payment:', error)
@@ -248,7 +280,49 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
     setTransactionType(null)
     setIsCajaChicaVisible(false)
   }
+  const handleSelectedPedido = (pedido: Pedido) => {
+    console.log(pedido)
 
+    setSelectedPedido(pedido)
+  }
+  const handleVolverPedido = () => {
+    setSelectedPedido(null)
+  }
+  const handleActualizarEstadoPedido = async (pedido: Pedido) => {
+    try {
+      const response = await fetch('/api/pedidos-caja', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: pedido,
+          status: nuevoEstadoPedido,
+        }),
+      })
+      if (!response.ok) {
+        throw new Error('Error updating pedido')
+      }
+      const result = await response.json()
+      console.log('Pedido updated successfully:', result)
+      if (result.success) {
+        setNuevoEstadoPedido('')
+        setSelectedPedido(null)
+        setPedidosLocalData((prevPedidos) =>
+          prevPedidos.map((p) => (p.id === pedido.id ? pedido : p))
+        )
+        setSelectedPedido(null)
+        window.location.reload()
+      }
+    } catch (error) {
+      setNuevoEstadoPedido('')
+      setSelectedPedido(null)
+      console.error('Error updating pedido:', error)
+    }
+  }
+  const handleSelectOrderStatus = (status: string) => {
+    setNuevoEstadoPedido(status)
+  }
   return (
     <div className="flex">
       <div className="h-full w-1/4 space-y-4">
@@ -301,7 +375,12 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
         </div>
         <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
           <PedidosLocal
-          // handleVolver={}
+            pedidosLocalData={pedidosLocalData}
+            selectedPedido={selectedPedido}
+            handleSelectedPedido={handleSelectedPedido}
+            handleVolver={handleVolverPedido}
+            handleActualizarEstadoPedido={handleActualizarEstadoPedido}
+            handleSelectOrderStatus={handleSelectOrderStatus}
           />
         </div>
       </div>
