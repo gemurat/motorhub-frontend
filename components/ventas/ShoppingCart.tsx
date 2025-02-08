@@ -22,7 +22,7 @@ interface ShoppingCartProps {
   }>
   removeProduct: (id: string) => void
   removeAllProducts?: () => void
-  buyProducts: () => void
+  buyProducts?: () => void
 }
 
 const getKeyValue = (item: any, key: string) => {
