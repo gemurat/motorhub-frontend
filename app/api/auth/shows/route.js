@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 
 export const GET = withApiAuthRequired(async function shows(req) {
   try {
-    const res = new NextResponse()
     const { accessToken } = await getAccessToken(req, res, {
       scopes: ['read:shows'],
     })

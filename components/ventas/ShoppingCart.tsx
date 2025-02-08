@@ -22,6 +22,7 @@ interface ShoppingCartProps {
   }>
   removeProduct: (id: string) => void
   removeAllProducts?: () => void
+  buyProducts?: () => void
 }
 
 const getKeyValue = (item: any, key: string) => {
@@ -32,6 +33,7 @@ const ShoppingCart: React.FC<ShoppingCartProps> = ({
   addedProducts,
   removeProduct,
   removeAllProducts,
+  buyProducts,
 }) => {
   const totalPrice = addedProducts.reduce(
     (total, item) => total + item.precio1 * item.cantidad,
@@ -41,7 +43,10 @@ const ShoppingCart: React.FC<ShoppingCartProps> = ({
   return (
     <div className="my-2 max-h-56 ">
       <div className="flex justify-end gap-2">
-        <button className="bg-green-500 text-white px-2 py-1 rounded">
+        <button
+          onClick={buyProducts}
+          className="bg-green-500 text-white px-2 py-1 rounded"
+        >
           Ir a Pagar
         </button>
         <button className="bg-yellow-500 text-white px-2 py-1 rounded">
