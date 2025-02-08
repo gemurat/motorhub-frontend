@@ -13,6 +13,8 @@ const statusTranslations: { [key: string]: string } = {
   PENDING: 'Pendiente',
   COMPLETED: 'Completado',
   CANCELLED: 'Cancelado',
+  ACTIVE: 'Activo',
+  COLLECTED: 'Cobrado',
 }
 
 export function translateStatus(status: string): string {

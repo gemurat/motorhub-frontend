@@ -5,6 +5,8 @@ import Sidebar from './Sidebar'
 import CashBox from './CashBox'
 import EmployeeSells from './EmployeeSells'
 import PedidosLocal from './PedidosLocal'
+import GiftCardModal from './GiftCardModal'
+import ProductReturnModal from './productReturnModal'
 type Pedido = {
   id: number
   order_date: Date
@@ -86,6 +88,7 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [isEmployeeSellsVisible, setIsEmployeeSellsVisible] = useState(false)
   const [selectedPedido, setSelectedPedido] = useState<selectedPedido>(null)
   const [pedidosLocalData, setPedidosLocalData] = useState<Pedido[]>([])
+  const [validGiftcardValue, setValidGiftcardValue] = useState('')
   interface EmployeeSell {
     seller_id: string
     seller_name: string
@@ -148,6 +151,7 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   }, [])
   const addOrderToProcess = (order: Order) => {
     setSelectedMedioPago(null)
+    setValidGiftcardValue('')
     setSelectedOrder(order)
   }
 
@@ -168,6 +172,7 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
           paymentMethodId: selectedMedioPago,
           newStatus: 'PAID',
           items: order.items,
+          giftCardValue: validGiftcardValue,
         }),
       })
 
@@ -323,10 +328,36 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const handleSelectOrderStatus = (status: string) => {
     setNuevoEstadoPedido(status)
   }
+  const handleValidateGiftcard = async (customerId: string) => {
+    console.log('Buscando GiftCard por cliente:', customerId)
+    try {
+      const response = await fetch('/api/giftcard', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          customerId: customerId,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Error buscando GiftCard')
+      }
+      const result = await response.json()
+      console.log('GiftCard encontrado:', result)
+      if (result.success && result.data.length > 0) {
+        console.log(result.data)
+        setValidGiftcardValue(result.data[0].balance)
+      }
+    } catch (error) {
+      console.error('Error buscando GiftCard:', error)
+    }
+  }
   return (
     <div className="flex">
       <div className="h-full w-1/4 space-y-4">
-        <div className="flex justify-end">
+        <div className="flex justify-between gap-4">
+          <GiftCardModal />
+          <ProductReturnModal />
           <Button onClick={getOrders}>Actualizar</Button>
         </div>
         <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
@@ -335,6 +366,8 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
           ) : selectedOrder ? (
             <Sidebar
               Order={selectedOrder}
+              validGiftcardValue={validGiftcardValue}
+              handleValidateGiftcard={handleValidateGiftcard}
               mediosPago={mediosPago}
               handleVolver={handleVolver}
               selectedMedioPago={selectedMedioPago}

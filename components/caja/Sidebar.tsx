@@ -1,5 +1,5 @@
 import { capitalizeFirstLetter, formatCurrency } from '@/lib/utils'
-import { Button, Divider, Select, SelectItem } from '@nextui-org/react'
+import { Button, Divider, Input, Select, SelectItem } from '@nextui-org/react'
 import React from 'react'
 
 interface SidebarProps {
@@ -23,6 +23,8 @@ interface SidebarProps {
   selectedMedioPago: number | null
   setSelectedMedioPago: React.Dispatch<React.SetStateAction<number | null>>
   processPayment: (order: any) => void
+  handleValidateGiftcard: (code: string) => void
+  validGiftcardValue: string
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -32,7 +34,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedMedioPago,
   setSelectedMedioPago,
   processPayment,
+  handleValidateGiftcard,
+  validGiftcardValue,
 }) => {
+  console.log('validGiftcardValue', validGiftcardValue)
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">
@@ -65,12 +71,54 @@ const Sidebar: React.FC<SidebarProps> = ({
             ))}
           </ul>
           <Divider className="my-3" />
-          <div className="flex justify-between">
-            <p className="text-md font-medium">Total:</p>
-            <p className="text-md font-medium">
-              {formatCurrency(Order.total_amount)}
-            </p>
-          </div>
+          {Number(validGiftcardValue) === 0 && (
+            <div className="flex justify-between">
+              <p className="text-md font-medium">Total:</p>
+              <p className="text-md font-medium">
+                {formatCurrency(Order.total_amount)}
+              </p>
+            </div>
+          )}
+          {Number(validGiftcardValue) > 0 && (
+            <>
+              <div className="flex justify-between">
+                <p className="text-md font-medium">Giftcard:</p>
+                <p className="text-md font-medium">
+                  {formatCurrency(validGiftcardValue)}
+                </p>
+              </div>
+
+              <div className="flex justify-between">
+                <p className="text-md font-medium">Total:</p>
+                <p className="text-md font-medium">
+                  {formatCurrency(
+                    (
+                      Number(Order.total_amount) - Number(validGiftcardValue)
+                    ).toString()
+                  )}
+                </p>
+              </div>
+            </>
+          )}
+
+          {selectedMedioPago === 4 && (
+            <div className="mt-3 flex justify-left gap-2">
+              <div>
+                <Input type="text" id="paymentCode" name="paymentCode" />
+              </div>
+              <Button
+                onClick={() =>
+                  handleValidateGiftcard(
+                    (document.getElementById('paymentCode') as HTMLInputElement)
+                      ?.value ?? ''
+                  )
+                }
+                className="mb-1"
+              >
+                Validar
+              </Button>
+            </div>
+          )}
           <div className="mt-5">
             <Select
               className="max-w-xs"

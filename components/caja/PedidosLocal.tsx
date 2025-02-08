@@ -82,6 +82,8 @@ const PedidosLocal = ({
           {pedidosLocalData.map((pedido, index) => (
             <div
               key={index}
+              role="button"
+              tabIndex={0}
               className={`grid grid-cols-5 gap-3 items-center cursor-pointer p-2 rounded ${
                 selectedPedido && pedido.id === selectedPedido?.id
                   ? 'bg-blue-100 dark:bg-blue-800'
@@ -89,6 +91,11 @@ const PedidosLocal = ({
               }`}
               onClick={() => {
                 handleSelectedPedido(pedidosLocalData[index])
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleSelectedPedido(pedidosLocalData[index])
+                }
               }}
             >
               {/* <span className="col-span-1">{pedido.id}</span> */}

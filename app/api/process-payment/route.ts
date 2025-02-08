@@ -5,11 +5,24 @@ import { getSession } from '@auth0/nextjs-auth0'
 export const POST = async (req: Request) => {
   const body = await req.json()
   try {
-    const { orderId, paymentMethodId, amount, newStatus, items } = body
+    const {
+      orderId,
+      paymentMethodId,
+      amount,
+      newStatus,
+      items,
+      giftCardValue,
+    } = body
     if (!orderId || !paymentMethodId || !amount || !newStatus || !items) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
+      )
+    }
+    if (giftCardValue < 0 && amount - giftCardValue <= 0) {
+      return NextResponse.json(
+        { success: true, message: 'Payment completed using gift card' },
+        { status: 200 }
       )
     }
     if (paymentMethodId === 1) {
