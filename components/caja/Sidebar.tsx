@@ -25,6 +25,10 @@ interface SidebarProps {
   processPayment: (order: any) => void
   handleValidateGiftcard: (giftCardCode: string) => void
   validGiftcardValue: string
+  paymentAmounts: { [key: number]: number }
+  setPaymentAmounts: React.Dispatch<
+    React.SetStateAction<{ [key: number]: number }>
+  >
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -36,11 +40,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   processPayment,
   handleValidateGiftcard,
   validGiftcardValue,
+  paymentAmounts,
+  setPaymentAmounts,
 }) => {
   console.log('Order', selectedMedioPago)
-  const [paymentAmounts, setPaymentAmounts] = React.useState<{
-    [key: number]: number
-  }>({})
 
   function handleInputChange(
     e: React.ChangeEvent<HTMLInputElement>,
@@ -100,35 +103,56 @@ const Sidebar: React.FC<SidebarProps> = ({
             ))}
           </ul>
           <Divider className="my-3" />
-          {Number(validGiftcardValue) === 0 && (
-            <div className="flex justify-between">
-              <p className="text-md font-medium">Total:</p>
-              <p className="text-md font-medium">
-                {formatCurrency(Order.total_amount)}
-              </p>
-            </div>
+          {/* detalle de valores pagados y a pagar */}
+          <div className="flex justify-between">
+            <p className="text-md font-medium">Total:</p>
+            <p className="text-md font-medium">
+              {formatCurrency(Order.total_amount)}
+            </p>
+          </div>
+          {selectedMedioPago?.map(
+            (medioPagoId) =>
+              paymentAmounts[medioPagoId] > 0 && (
+                <div key={medioPagoId} className="flex justify-between">
+                  <p className="text-md font-medium">
+                    {mediosPago.find((medio) => medio.id === medioPagoId)?.name}
+                    :
+                  </p>
+                  <p className="text-md font-medium">
+                    {formatCurrency(paymentAmounts[medioPagoId].toString())}
+                  </p>
+                </div>
+              )
           )}
-          {Number(validGiftcardValue) > 0 && (
-            <>
-              <div className="flex justify-between">
-                <p className="text-md font-medium">Giftcard:</p>
-                <p className="text-md font-medium">
-                  {formatCurrency(validGiftcardValue)}
-                </p>
-              </div>
 
-              <div className="flex justify-between">
-                <p className="text-md font-medium">Total:</p>
-                <p className="text-md font-medium">
-                  {formatCurrency(
-                    (
-                      Number(Order.total_amount) - Number(validGiftcardValue)
-                    ).toString()
-                  )}
-                </p>
-              </div>
-            </>
-          )}
+          <Divider className="my-2" />
+
+          <div className="flex justify-between">
+            <p className="text-md font-semibold">Total Pagado:</p>
+            <p className="text-md font-semibold">
+              {formatCurrency(
+                Object.values(paymentAmounts)
+                  .reduce((acc, amount) => acc + amount, 0)
+                  .toString()
+              )}
+            </p>
+          </div>
+
+          <div className="flex justify-between">
+            <p className="text-md font-semibold">Restante:</p>
+            <p className="text-md font-semibold">
+              {formatCurrency(
+                Math.max(
+                  0,
+                  Number(Order.total_amount) -
+                    Object.values(paymentAmounts).reduce(
+                      (acc, amount) => acc + amount,
+                      0
+                    )
+                ).toString()
+              )}
+            </p>
+          </div>
 
           {selectedMedioPago?.includes(4) && (
             <div className="mt-3 flex justify-left gap-2">
@@ -201,7 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   Object.values(paymentAmounts).reduce(
                     (acc, amount) => acc + amount,
                     0
-                  ) !== Number(Order.total_amount)
+                  ) < Number(Order.total_amount)
                 }
               >
                 Confirmar Pago

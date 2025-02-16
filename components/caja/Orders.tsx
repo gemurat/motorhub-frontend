@@ -1,12 +1,13 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { Card, CardHeader, CardBody, Divider, Button } from '@nextui-org/react'
+import { Button } from '@nextui-org/react'
 import Sidebar from './Sidebar'
 import CashBox from './CashBox'
 import EmployeeSells from './EmployeeSells'
 import PedidosLocal from './PedidosLocal'
 import GiftCardModal from './GiftCardModal'
 import ProductReturnModal from './productReturnModal'
+import OrdersCards from './OrdersCards'
 type Pedido = {
   id: number
   order_date: Date
@@ -22,6 +23,7 @@ interface PaymentMethod {
 }
 interface Order {
   id: number
+  status: string
   customer_id: string
   seller_name: string
   total_amount: string
@@ -36,6 +38,9 @@ type estadoPedido = 'PENDING' | 'COMPLETED' | 'CANCELLED'
 type TransactionType = 'expense' | 'income'
 
 const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
+  const [paymentAmounts, setPaymentAmounts] = React.useState<{
+    [key: number]: number
+  }>({})
   const [orders, setOrders] = useState<Order[]>([])
   const [currentBalance, setCurrentBalance] = useState('0.00')
   const [lastUpdatedBalance, setLastUpdatedBalance] = useState('')
@@ -162,23 +167,24 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       alert('No order to process')
       return
     }
-    console.log('Processing payment for order:', order)
-
-    // try {
-    //   const response = await fetch('/api/process-payment', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //       orderId: order.id,
-    //       amount: order.total_amount,
-    //       paymentMethodId: selectedMedioPago,
-    //       newStatus: 'PAID',
-    //       items: order.items,
-    //       giftCardValue: validGiftcardValue,
-    //     }),
-    //   })
+    // if (!selectedMedioPago) {
+    //   alert('Seleccione un medio de pago')
+    //   return
+    // }
+    // const hasGiftCard = paymentAmounts.hasOwnProperty('4'),
+    //   hasTransfer = paymentAmounts.hasOwnProperty('3')
+    // if (hasGiftCard || hasTransfer) {
+    //   try {
+    //     const response = await fetch('/api/order-process-review', {
+    //       method: 'PUT',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //       body: JSON.stringify({
+    //         orderId: order.id,
+    //         paymentMethodId: selectedMedioPago,
+    //       }),
+    //     })
 
     //   if (!response.ok) {
     //     throw new Error('Payment processing failed')
@@ -199,6 +205,42 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
     //   console.error('Error processing payment:', error)
     //   // Handle error in payment processing (e.g., show an error message)
     // }
+    // } else {
+    console.log('Processing payment for order:', order)
+    try {
+      const response = await fetch('/api/process-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: order.total_amount,
+          paymentMethodId: selectedMedioPago,
+          items: order.items,
+          paymentAmounts,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Payment processing failed')
+      }
+      const result = await response.json()
+      console.log('Payment processed successfully:', result)
+      if (result.success) {
+        setOrders((prevOrders) => prevOrders.filter((o) => o.id !== order.id))
+        setSelectedOrder(null)
+      }
+
+      // Call other post and get functions
+      await cajaChica()
+      await sellsByEmployee()
+      await getPedidosLocal()
+      // Handle successful payment processing (e.g., show a success message, update UI)
+    } catch (error) {
+      console.error('Error processing payment:', error)
+      // Handle error in payment processing (e.g., show an error message)
+    }
   }
   async function cancelPayment(order: any) {
     if (!window.confirm('¿Estás seguro de que deseas cancelar este pedido?')) {
@@ -371,6 +413,8 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
             <p>Procesando Pago...</p>
           ) : selectedOrder ? (
             <Sidebar
+              paymentAmounts={paymentAmounts}
+              setPaymentAmounts={setPaymentAmounts}
               Order={selectedOrder}
               validGiftcardValue={validGiftcardValue}
               handleValidateGiftcard={handleValidateGiftcard}
@@ -409,7 +453,7 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
             isEmployeeSellsVisible={isEmployeeSellsVisible}
             handleEmployeeSellsVisible={handleEmployeeSellsVisible}
             employeeSells={employeeSells}
-            sellsByEmployee={sellsByEmployee ?? []}
+            sellsByEmployee={sellsByEmployee}
           />
         </div>
         <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
@@ -423,63 +467,13 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
           />
         </div>
       </div>
-
-      <div className="w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-center">
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          orders
-            .sort(
-              (a, b) =>
-                new Date(a.order_date).getTime() -
-                new Date(b.order_date).getTime()
-            )
-            .map((order) => (
-              <Card
-                key={order.id}
-                isDisabled={selectedOrder?.id === order.id}
-                className="min-w-[300px] h-fit p-4 m-4 rounded-lg shadow-lg border border-gray-200"
-              >
-                <CardHeader className="flex gap-3 mb-4">
-                  <div className="flex flex-col text-left">
-                    <p className="text-lg font-semibold">
-                      Cliente: {order.customer_id}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Hora:{' '}
-                      {new Date(order.order_date).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Vendedor: {order.seller_name}
-                    </p>
-                  </div>
-                </CardHeader>
-                <Divider />
-                <CardBody className="mt-4">
-                  <div className="flex flex-wrap gap-4 justify-end">
-                    <Button
-                      isDisabled={selectedOrder?.id === order.id}
-                      color="danger"
-                      onClick={() => cancelPayment(order)}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      isDisabled={selectedOrder?.id === order.id}
-                      color="success"
-                      onClick={() => addOrderToProcess(order)}
-                    >
-                      Procesar
-                    </Button>
-                  </div>
-                </CardBody>
-              </Card>
-            ))
-        )}
-      </div>
+      <OrdersCards
+        selectedOrder={selectedOrder}
+        loading={loading}
+        orders={orders}
+        addOrderToProcess={addOrderToProcess}
+        cancelPayment={cancelPayment}
+      />
     </div>
   )
 }
