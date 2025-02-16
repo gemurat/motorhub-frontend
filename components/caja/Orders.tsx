@@ -65,7 +65,7 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [paymentLoader, setPaymentLoader] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [selectedMedioPago, setSelectedMedioPago] = React.useState<
-    number | null
+    number[] | null
   >(null)
   const getOrders = useCallback(async () => {
     const response = await fetch('/api/orders', {
@@ -148,11 +148,13 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const handleVolver = useCallback(() => {
     setSelectedOrder(null)
     setSelectedMedioPago(null)
+    setValidGiftcardValue('')
   }, [])
   const addOrderToProcess = (order: Order) => {
     setSelectedMedioPago(null)
     setValidGiftcardValue('')
     setSelectedOrder(order)
+    setValidGiftcardValue('')
   }
 
   async function processPayment(order: any) {
@@ -160,41 +162,43 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       alert('No order to process')
       return
     }
-    try {
-      const response = await fetch('/api/process-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          amount: order.total_amount,
-          paymentMethodId: selectedMedioPago,
-          newStatus: 'PAID',
-          items: order.items,
-          giftCardValue: validGiftcardValue,
-        }),
-      })
+    console.log('Processing payment for order:', order)
 
-      if (!response.ok) {
-        throw new Error('Payment processing failed')
-      }
-      const result = await response.json()
-      console.log('Payment processed successfully:', result)
-      if (result.success) {
-        setOrders((prevOrders) => prevOrders.filter((o) => o.id !== order.id))
-        setSelectedOrder(null)
-      }
+    // try {
+    //   const response = await fetch('/api/process-payment', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       orderId: order.id,
+    //       amount: order.total_amount,
+    //       paymentMethodId: selectedMedioPago,
+    //       newStatus: 'PAID',
+    //       items: order.items,
+    //       giftCardValue: validGiftcardValue,
+    //     }),
+    //   })
 
-      // Call other post and get functions
-      await cajaChica()
-      await sellsByEmployee()
-      await getPedidosLocal()
-      // Handle successful payment processing (e.g., show a success message, update UI)
-    } catch (error) {
-      console.error('Error processing payment:', error)
-      // Handle error in payment processing (e.g., show an error message)
-    }
+    //   if (!response.ok) {
+    //     throw new Error('Payment processing failed')
+    //   }
+    //   const result = await response.json()
+    //   console.log('Payment processed successfully:', result)
+    //   if (result.success) {
+    //     setOrders((prevOrders) => prevOrders.filter((o) => o.id !== order.id))
+    //     setSelectedOrder(null)
+    //   }
+
+    //   // Call other post and get functions
+    //   await cajaChica()
+    //   await sellsByEmployee()
+    //   await getPedidosLocal()
+    //   // Handle successful payment processing (e.g., show a success message, update UI)
+    // } catch (error) {
+    //   console.error('Error processing payment:', error)
+    //   // Handle error in payment processing (e.g., show an error message)
+    // }
   }
   async function cancelPayment(order: any) {
     if (!window.confirm('¿Estás seguro de que deseas cancelar este pedido?')) {
@@ -328,25 +332,27 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const handleSelectOrderStatus = (status: string) => {
     setNuevoEstadoPedido(status)
   }
-  const handleValidateGiftcard = async (customerId: string) => {
-    console.log('Buscando GiftCard por cliente:', customerId)
+  const handleValidateGiftcard = async (giftCardCode: string) => {
+    console.log('Buscando GiftCard por cliente:', giftCardCode)
     try {
-      const response = await fetch('/api/giftcard', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          customerId: customerId,
-        },
-      })
+      const response = await fetch(
+        `/api/giftcard-validator?giftcardcode=${giftCardCode}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
 
       if (!response.ok) {
         throw new Error('Error buscando GiftCard')
       }
       const result = await response.json()
-      console.log('GiftCard encontrado:', result)
-      if (result.success && result.data.length > 0) {
+      console.log('GiftCard encontrado:', result.data.balance)
+      if (result.success && result.data) {
         console.log(result.data)
-        setValidGiftcardValue(result.data[0].balance)
+        setValidGiftcardValue(result.data.balance)
       }
     } catch (error) {
       console.error('Error buscando GiftCard:', error)

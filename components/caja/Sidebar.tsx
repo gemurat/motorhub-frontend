@@ -20,10 +20,10 @@ interface SidebarProps {
     }[]
   } | null
   handleVolver: () => void
-  selectedMedioPago: number | null
-  setSelectedMedioPago: React.Dispatch<React.SetStateAction<number | null>>
+  selectedMedioPago: number[] | null
+  setSelectedMedioPago: React.Dispatch<React.SetStateAction<number[] | null>>
   processPayment: (order: any) => void
-  handleValidateGiftcard: (code: string) => void
+  handleValidateGiftcard: (giftCardCode: string) => void
   validGiftcardValue: string
 }
 
@@ -37,7 +37,36 @@ const Sidebar: React.FC<SidebarProps> = ({
   handleValidateGiftcard,
   validGiftcardValue,
 }) => {
-  console.log('validGiftcardValue', validGiftcardValue)
+  console.log('Order', selectedMedioPago)
+  const [paymentAmounts, setPaymentAmounts] = React.useState<{
+    [key: number]: number
+  }>({})
+
+  function handleInputChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+    medioPagoId: number
+  ): void {
+    const value = Number(e.target.value)
+    setPaymentAmounts((prev) => ({
+      ...prev,
+      [medioPagoId]: value,
+    }))
+  }
+
+  React.useEffect(() => {
+    if (validGiftcardValue) {
+      setPaymentAmounts((prev) => ({
+        ...prev,
+        4: Number(validGiftcardValue),
+      }))
+    }
+  }, [validGiftcardValue])
+
+  React.useEffect(() => {
+    setPaymentAmounts({})
+  }, [Order?.id])
+
+  console.log(paymentAmounts)
 
   return (
     <div>
@@ -101,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </>
           )}
 
-          {selectedMedioPago === 4 && (
+          {selectedMedioPago?.includes(4) && (
             <div className="mt-3 flex justify-left gap-2">
               <div>
                 <Input type="text" id="paymentCode" name="paymentCode" />
@@ -124,8 +153,12 @@ const Sidebar: React.FC<SidebarProps> = ({
               className="max-w-xs"
               label="Medio de Pago"
               labelPlacement="inside"
-              value={selectedMedioPago ?? ''}
-              onChange={(e) => setSelectedMedioPago(Number(e.target.value))}
+              value={selectedMedioPago?.map(String) ?? []}
+              selectionMode="multiple"
+              onSelectionChange={(keys) => {
+                const selectedOptions = Array.from(keys, (key) => Number(key))
+                setSelectedMedioPago(selectedOptions)
+              }}
             >
               {mediosPago.map((medio) => (
                 <SelectItem key={medio.id} value={medio.id}>
@@ -133,6 +166,29 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </SelectItem>
               ))}
             </Select>
+            <div className="flex gap-3 justify-end flex-wrap mt-4">
+              {selectedMedioPago !== null &&
+                Array.isArray(selectedMedioPago) &&
+                selectedMedioPago.length > 0 &&
+                selectedMedioPago.map((medioPagoId) => (
+                  <Input
+                    key={medioPagoId}
+                    type="number"
+                    name={`medioPago-${medioPagoId}`}
+                    label={`Monto para ${mediosPago.find((medio) => medio.id === medioPagoId)?.name}`}
+                    labelPlacement="outside"
+                    placeholder={`Monto para ${mediosPago.find((medio) => medio.id === medioPagoId)?.name}`}
+                    className="mt-3"
+                    disabled={medioPagoId === 4}
+                    value={
+                      medioPagoId === 4
+                        ? validGiftcardValue
+                        : paymentAmounts[medioPagoId]?.toString() || ''
+                    }
+                    onChange={(e) => handleInputChange(e, medioPagoId)}
+                  />
+                ))}
+            </div>
             <div className="flex gap-3 justify-end">
               <Button onClick={handleVolver} className="mt-3" color="default">
                 Volver
@@ -141,7 +197,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => processPayment(Order)}
                 className="mt-3"
                 color="success"
-                isDisabled={selectedMedioPago === null}
+                isDisabled={
+                  Object.values(paymentAmounts).reduce(
+                    (acc, amount) => acc + amount,
+                    0
+                  ) !== Number(Order.total_amount)
+                }
               >
                 Confirmar Pago
               </Button>

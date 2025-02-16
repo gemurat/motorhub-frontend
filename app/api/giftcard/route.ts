@@ -7,12 +7,21 @@ export const GET = async (req: Request) => {
     const customerId = url.searchParams.get('customerId')
     let result
     if (customerId) {
-      console.log('search by id:', customerId)
-
       result = await query(
-        `SELECT * FROM public."GiftCards" WHERE customer_id LIKE $1 AND status = 'ACTIVE'`,
+        `SELECT * FROM public."GiftCards" WHERE customer_id LIKE $1 AND status = 'ACTIVE' ORDER BY issue_date DESC`,
         [`%${customerId}%`]
       )
+      if (result.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'No gift cards found' },
+          { status: 404 }
+        )
+      } else {
+        return NextResponse.json(
+          { success: true, data: result.rows },
+          { status: 200 }
+        )
+      }
     } else {
       result = await query(`SELECT * FROM public."GiftCards"`)
     }
