@@ -1,13 +1,15 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@nextui-org/react'
-import Sidebar from './Sidebar'
-import CashBox from './CashBox'
-import EmployeeSells from './EmployeeSells'
-import PedidosLocal from './PedidosLocal'
-import GiftCardModal from './GiftCardModal'
-import ProductReturnModal from './productReturnModal'
-import OrdersCards from './OrdersCards'
+import GiftCardModal from '../caja/GiftCardModal'
+import ProductReturnModal from '../caja/productReturnModal'
+import EmployeeSells from '../caja/EmployeeSells'
+import AprovalCards from './AprovalCards'
+import SidePayment from './SidePayment'
+const ORDER_STATES = [
+  { id: 1, name: 'APPROVED' },
+  { id: 2, name: 'REJECTED' },
+]
 type Pedido = {
   id: number
   order_date: Date
@@ -37,7 +39,7 @@ interface Order {
 type estadoPedido = 'PENDING' | 'COMPLETED' | 'CANCELLED'
 type TransactionType = 'expense' | 'income'
 
-const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
+const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [paymentAmounts, setPaymentAmounts] = React.useState<{
     [key: number]: number
   }>({})
@@ -70,10 +72,10 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [paymentLoader, setPaymentLoader] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [selectedMedioPago, setSelectedMedioPago] = React.useState<
-    number[] | null
+    number | null
   >(null)
-  const getOrders = useCallback(async () => {
-    const response = await fetch('/api/orders', {
+  const getReviewOrders = useCallback(async () => {
+    const response = await fetch('/api/order-process-review', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -94,7 +96,6 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [selectedPedido, setSelectedPedido] = useState<selectedPedido>(null)
   const [pedidosLocalData, setPedidosLocalData] = useState<Pedido[]>([])
   const [validGiftcardValue, setValidGiftcardValue] = useState('')
-  const [giftcardId, setGiftcardId] = useState('')
   interface EmployeeSell {
     seller_id: string
     seller_name: string
@@ -146,20 +147,19 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   }
   useEffect(() => {
     cajaChica()
-    getOrders()
+    getReviewOrders()
     sellsByEmployee()
     getPedidosLocal()
-  }, [getOrders])
+  }, [getReviewOrders])
   // console.log(orders)
   const handleVolver = useCallback(() => {
     setSelectedOrder(null)
     setSelectedMedioPago(null)
     setValidGiftcardValue('')
-    setGiftcardId('')
   }, [])
   const addOrderToProcess = (order: Order) => {
     setSelectedMedioPago(null)
-    setGiftcardId('')
+    setValidGiftcardValue('')
     setSelectedOrder(order)
     setValidGiftcardValue('')
   }
@@ -169,21 +169,20 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       alert('No order to process')
       return
     }
+    console.log('Processing payment for order:', order, selectedMedioPago)
 
-    console.log('Processing payment for order:', order)
     try {
-      const response = await fetch('/api/process-payment', {
-        method: 'POST',
+      const response = await fetch('/api/order-process-review', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           orderId: order.id,
-          amount: order.total_amount,
-          paymentMethodId: selectedMedioPago,
-          items: order.items,
-          paymentAmounts,
-          giftcardId: giftcardId,
+          newStatus:
+            selectedMedioPago !== null
+              ? ORDER_STATES[selectedMedioPago - 1].name
+              : 2, // Replace 0 with the appropriate index or logic
         }),
       })
 
@@ -298,7 +297,6 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   }
   const handleSelectedPedido = (pedido: Pedido) => {
     console.log(pedido)
-
     setSelectedPedido(pedido)
   }
   const handleVolverPedido = () => {
@@ -360,7 +358,6 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       if (result.success && result.data) {
         console.log(result.data)
         setValidGiftcardValue(result.data.balance)
-        setGiftcardId(result.data.id)
       }
     } catch (error) {
       console.error('Error buscando GiftCard:', error)
@@ -372,13 +369,13 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
         <div className="flex justify-between gap-4">
           <GiftCardModal />
           <ProductReturnModal />
-          <Button onClick={getOrders}>Actualizar</Button>
+          <Button onClick={getReviewOrders}>Actualizar</Button>
         </div>
         <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
           {paymentLoader ? (
             <p>Procesando Pago...</p>
           ) : selectedOrder ? (
-            <Sidebar
+            <SidePayment
               paymentAmounts={paymentAmounts}
               setPaymentAmounts={setPaymentAmounts}
               Order={selectedOrder}
@@ -399,22 +396,6 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
           )}
         </div>
         <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
-          <CashBox
-            handleCashboxVisible={() => setIsCajaChicaVisible(true)}
-            isCajaChicaVisible={isCajaChicaVisible}
-            handleCashboxVolver={handleCashboxVolver}
-            handleCashboxSubmit={handleCashboxSubmit}
-            transactionType={transactionType}
-            handleTransactionTypeChange={handleTransactionTypeChange}
-            currentCash={currentBalance}
-            lasUpdated={lastUpdatedBalance}
-            amount={cashboxAmount}
-            description={cashBoxDescription}
-            handleCashboxAmountChange={handleCashboxAmountChange}
-            handleDescriptionChange={handleDescriptionChange}
-          />
-        </div>
-        <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
           <EmployeeSells
             isEmployeeSellsVisible={isEmployeeSellsVisible}
             handleEmployeeSellsVisible={handleEmployeeSellsVisible}
@@ -422,18 +403,8 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
             sellsByEmployee={sellsByEmployee}
           />
         </div>
-        <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
-          <PedidosLocal
-            pedidosLocalData={pedidosLocalData}
-            selectedPedido={selectedPedido}
-            handleSelectedPedido={handleSelectedPedido}
-            handleVolver={handleVolverPedido}
-            handleActualizarEstadoPedido={handleActualizarEstadoPedido}
-            handleSelectOrderStatus={handleSelectOrderStatus}
-          />
-        </div>
       </div>
-      <OrdersCards
+      <AprovalCards
         selectedOrder={selectedOrder}
         loading={loading}
         orders={orders}
@@ -444,4 +415,4 @@ const OrderSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   )
 }
 
-export default OrderSection
+export default MainSection

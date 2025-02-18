@@ -31,7 +31,32 @@ const OrdersCards: React.FC<OrdersCardsProps> = ({
   addOrderToProcess,
 }) => {
   console.log('Orders:', orders)
+  const completeOrder = async (order: Order) => {
+    try {
+      const response = await fetch('/api/order-process-review', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          newStatus: 'APROVED',
+          completed: true,
+        }),
+      })
 
+      if (!response.ok) {
+        throw new Error('Failed to complete the order')
+      }
+
+      const updatedOrder = await response.json()
+      // addOrderToProcess(updatedOrder)
+      alert('Orden completada')
+      window.location.reload()
+    } catch (error) {
+      console.error('Error completing the order:', error)
+    }
+  }
   const pendingOrders = orders.filter((order) => order.status === 'PENDING')
   const otherOrders = orders.filter((order) => order.status !== 'PENDING')
 
@@ -110,7 +135,7 @@ const OrdersCards: React.FC<OrdersCardsProps> = ({
                   className={`min-w-[300px] h-fit p-4 m-4 rounded-lg shadow-lg border ${
                     order.status === 'IN REVIEW'
                       ? 'border-yellow-500'
-                      : 'border-gray-200'
+                      : 'border-green-500'
                   }`}
                 >
                   <CardHeader className="flex gap-3 mb-4">
@@ -145,11 +170,11 @@ const OrdersCards: React.FC<OrdersCardsProps> = ({
                         color={
                           order.status === 'IN REVIEW' ? 'warning' : 'success'
                         }
-                        onClick={() => addOrderToProcess(order)}
+                        onClick={() => completeOrder(order)}
                       >
                         {order.status === 'IN REVIEW'
                           ? 'Pendiente'
-                          : 'Procesar'}
+                          : 'Completar'}
                       </Button>
                     </div>
                   </CardBody>

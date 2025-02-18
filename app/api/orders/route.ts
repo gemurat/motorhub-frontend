@@ -9,7 +9,7 @@ export const GET = async () => {
        JOIN "OrderItems" oi ON o.id = oi.order_id
        JOIN "Users" u ON o.seller_id = u.id
        JOIN "Products" p ON oi.product_id = p.id
-       WHERE o.status IN ('PENDING', 'APROVED', 'IN REVIEW');`
+       WHERE o.status IN ('PENDING', 'APPROVED', 'IN REVIEW');`
     )
 
     const orders = pendingOrders.rows.reduce((acc, row) => {
