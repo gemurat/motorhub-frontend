@@ -4,17 +4,18 @@ export const GET = async () => {
   try {
     const pendingOrders = await query(
       `SELECT o.id, o.customer_id, o.seller_id, u.username as seller_name, o.order_date, o.total_amount, 
-              oi.product_id, p.description as product_name, oi.quantity, oi.price
+              oi.product_id, p.description as product_name, oi.quantity, oi.price, o.status
        FROM "Orders" o
        JOIN "OrderItems" oi ON o.id = oi.order_id
        JOIN "Users" u ON o.seller_id = u.id
        JOIN "Products" p ON oi.product_id = p.id
-       WHERE o.status = 'PENDING'`
+       WHERE o.status IN ('PENDING', 'APPROVED', 'IN REVIEW');`
     )
 
     const orders = pendingOrders.rows.reduce((acc, row) => {
       const {
         id,
+        status,
         customer_id,
         seller_id,
         seller_name,
@@ -28,6 +29,7 @@ export const GET = async () => {
       if (!acc[id]) {
         acc[id] = {
           id,
+          status,
           customer_id,
           seller_id,
           seller_name,

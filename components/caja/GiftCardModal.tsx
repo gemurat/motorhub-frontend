@@ -35,6 +35,8 @@ export default function GiftCardModal() {
     onClose()
   }
   const searchGiftCardByCustomerId = async (customerId: string) => {
+    console.log(searchCode)
+
     console.log('Buscando GiftCard por cliente:', customerId)
     try {
       const response = await fetch(`/api/giftcard?customerId=${customerId}`, {
@@ -127,7 +129,7 @@ export default function GiftCardModal() {
                     onChange={(e) => setSearchCode(e.target.value)}
                   />
                   <Button
-                    onPress={() => searchGiftCardByCustomerId(customerId)}
+                    onPress={() => searchGiftCardByCustomerId(searchCode)}
                   >
                     Buscar
                   </Button>
@@ -137,7 +139,7 @@ export default function GiftCardModal() {
                 {searchResults.length > 0 && (
                   <div className="mt-4">
                     <div className="grid grid-cols-6 gap-3">
-                      <span className="col-span-3">Vale</span>
+                      <span className="col-span-3">Codigo</span>
                       <span className="col-span-2">Valor</span>
                       <span className="col-span-1">Estado</span>
                     </div>

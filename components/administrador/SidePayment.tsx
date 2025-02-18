@@ -2,7 +2,7 @@ import { capitalizeFirstLetter, formatCurrency } from '@/lib/utils'
 import { Button, Divider, Input, Select, SelectItem } from '@nextui-org/react'
 import React from 'react'
 
-interface SidebarProps {
+interface SidePaymentProps {
   mediosPago: {
     id: number
     name: string
@@ -20,8 +20,8 @@ interface SidebarProps {
     }[]
   } | null
   handleVolver: () => void
-  selectedMedioPago: number[] | null
-  setSelectedMedioPago: React.Dispatch<React.SetStateAction<number[] | null>>
+  selectedMedioPago: number | null
+  setSelectedMedioPago: React.Dispatch<React.SetStateAction<number | null>>
   processPayment: (order: any) => void
   handleValidateGiftcard: (giftCardCode: string) => void
   validGiftcardValue: string
@@ -30,8 +30,11 @@ interface SidebarProps {
     React.SetStateAction<{ [key: number]: number }>
   >
 }
-
-const Sidebar: React.FC<SidebarProps> = ({
+const estadosPedido = [
+  { id: 1, name: 'Aprovado' },
+  { id: 2, name: 'Rechazado' },
+]
+const SidePayment: React.FC<SidePaymentProps> = ({
   Order,
   mediosPago,
   handleVolver,
@@ -39,38 +42,46 @@ const Sidebar: React.FC<SidebarProps> = ({
   setSelectedMedioPago,
   processPayment,
   handleValidateGiftcard,
-  validGiftcardValue,
   paymentAmounts,
   setPaymentAmounts,
 }) => {
-  console.log('Order', selectedMedioPago)
+  const getOrderDetails = async () => {
+    try {
+      const response = await fetch(`/api/paymets-by-id?orderId=${Order?.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-  function handleInputChange(
-    e: React.ChangeEvent<HTMLInputElement>,
-    medioPagoId: number
-  ): void {
-    const value = Number(e.target.value)
-    setPaymentAmounts((prev) => ({
-      ...prev,
-      [medioPagoId]: value,
-    }))
+      if (!response.ok) {
+        throw new Error('caja chica failed')
+      }
+
+      const result = await response.json()
+      console.log('result.data', result.data)
+      const paymentAmountsFromResponse = Array.isArray(result.data)
+        ? result.data.reduce((acc: { [key: number]: number }, payment: any) => {
+            acc[payment.payment_method_id] =
+              (acc[payment.payment_method_id] || 0) + Number(payment.amount)
+            return acc
+          }, {})
+        : {}
+
+      setPaymentAmounts(paymentAmountsFromResponse)
+
+      // Handle successful payment processing (e.g., show a success message, update UI)
+    } catch (error) {
+      console.error('error payments:', error)
+      // Handle error in payment processing (e.g., show an error
+    }
   }
 
   React.useEffect(() => {
-    if (validGiftcardValue) {
-      setPaymentAmounts((prev) => ({
-        ...prev,
-        4: Number(validGiftcardValue),
-      }))
+    if (Order) {
+      getOrderDetails()
     }
-  }, [validGiftcardValue])
-
-  React.useEffect(() => {
-    setPaymentAmounts({})
-  }, [Order?.id])
-
-  console.log(paymentAmounts)
-
+  }, [Order])
   return (
     <div>
       <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">
@@ -104,26 +115,24 @@ const Sidebar: React.FC<SidebarProps> = ({
           </ul>
           <Divider className="my-3" />
           {/* detalle de valores pagados y a pagar */}
-          <div className="flex justify-between">
-            <p className="text-md font-medium">Total:</p>
-            <p className="text-md font-medium">
-              {formatCurrency(Order.total_amount)}
-            </p>
-          </div>
-          {selectedMedioPago?.map(
-            (medioPagoId) =>
-              paymentAmounts[medioPagoId] > 0 && (
+          {Object.keys(paymentAmounts).map((medioPagoId) => {
+            const amount = paymentAmounts[Number(medioPagoId)]
+            if (amount > 0) {
+              const medioPago = mediosPago.find(
+                (medio: { id: number; name: string }) =>
+                  medio.id === Number(medioPagoId)
+              )
+              return (
                 <div key={medioPagoId} className="flex justify-between">
+                  <p className="text-md font-medium">{medioPago?.name}:</p>
                   <p className="text-md font-medium">
-                    {mediosPago.find((medio) => medio.id === medioPagoId)?.name}
-                    :
-                  </p>
-                  <p className="text-md font-medium">
-                    {formatCurrency(paymentAmounts[medioPagoId].toString())}
+                    {formatCurrency(amount.toString())}
                   </p>
                 </div>
               )
-          )}
+            }
+            return null
+          })}
 
           <Divider className="my-2" />
 
@@ -153,80 +162,35 @@ const Sidebar: React.FC<SidebarProps> = ({
               )}
             </p>
           </div>
-
-          {selectedMedioPago?.includes(4) && (
-            <div className="mt-3 flex justify-left gap-2">
-              <div>
-                <Input type="text" id="paymentCode" name="paymentCode" />
-              </div>
-              <Button
-                onClick={() =>
-                  handleValidateGiftcard(
-                    (document.getElementById('paymentCode') as HTMLInputElement)
-                      ?.value ?? ''
-                  )
-                }
-                className="mb-1"
-              >
-                Validar
-              </Button>
-            </div>
-          )}
           <div className="mt-5">
             <Select
               className="max-w-xs"
-              label="Medio de Pago"
+              label="Nuevo Estado de Pedido"
               labelPlacement="inside"
-              value={selectedMedioPago?.map(String) ?? []}
-              selectionMode="multiple"
+              value={
+                selectedMedioPago !== null ? String(selectedMedioPago) : ''
+              }
               onSelectionChange={(keys) => {
-                const selectedOptions = Array.from(keys, (key) => Number(key))
-                setSelectedMedioPago(selectedOptions)
+                const selectedOption = Number(Array.from(keys)[0])
+                setSelectedMedioPago(selectedOption)
               }}
             >
-              {mediosPago.map((medio) => (
+              {estadosPedido.map((medio) => (
                 <SelectItem key={medio.id} value={medio.id}>
                   {medio.name}
                 </SelectItem>
               ))}
             </Select>
-            <div className="flex gap-3 justify-end flex-wrap mt-4">
-              {selectedMedioPago !== null &&
-                Array.isArray(selectedMedioPago) &&
-                selectedMedioPago.length > 0 &&
-                selectedMedioPago.map((medioPagoId) => (
-                  <Input
-                    key={medioPagoId}
-                    type="number"
-                    name={`medioPago-${medioPagoId}`}
-                    label={`Monto para ${mediosPago.find((medio) => medio.id === medioPagoId)?.name}`}
-                    labelPlacement="outside"
-                    placeholder={`Monto para ${mediosPago.find((medio) => medio.id === medioPagoId)?.name}`}
-                    className="mt-3"
-                    disabled={medioPagoId === 4}
-                    value={
-                      medioPagoId === 4
-                        ? validGiftcardValue
-                        : paymentAmounts[medioPagoId]?.toString() || ''
-                    }
-                    onChange={(e) => handleInputChange(e, medioPagoId)}
-                  />
-                ))}
-            </div>
+            <div className="flex gap-3 justify-end flex-wrap mt-4"></div>
             <div className="flex gap-3 justify-end">
               <Button onClick={handleVolver} className="mt-3" color="default">
                 Volver
               </Button>
               <Button
-                onClick={() => processPayment(Order)}
+                onClick={() => processPayment({ ...Order, selectedMedioPago })}
                 className="mt-3"
                 color="success"
-                isDisabled={
-                  Object.values(paymentAmounts).reduce(
-                    (acc, amount) => acc + amount,
-                    0
-                  ) < Number(Order.total_amount)
-                }
+                isDisabled={selectedMedioPago === null}
               >
                 Confirmar Pago
               </Button>
@@ -241,4 +205,4 @@ const Sidebar: React.FC<SidebarProps> = ({
   )
 }
 
-export default Sidebar
+export default SidePayment
