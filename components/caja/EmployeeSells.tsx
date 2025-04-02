@@ -20,7 +20,7 @@ const EmployeeSells = ({
         0
       )
     : 0
-  console.log(totalAmount)
+  // console.log(totalAmount)
 
   return (
     <div className="space-y-5">

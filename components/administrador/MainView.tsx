@@ -37,6 +37,11 @@ interface Order {
     quantity: number
   }[]
 }
+interface sellByType {
+  payment_method: string
+  payment_count: number
+  total_amount: number
+}
 type estadoPedido = 'PENDING' | 'COMPLETED' | 'CANCELLED'
 type TransactionType = 'expense' | 'income'
 
@@ -107,6 +112,7 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [nuevoEstadoPedido, setNuevoEstadoPedido] = useState('')
 
   const [employeeSells, setEmployeeSells] = useState<EmployeeSell[]>([])
+  const [sellByType, setSellByType] = useState<sellByType[]>([])
   const handleEmployeeSellsVisible = () => {
     setIsEmployeeSellsVisible(!isEmployeeSellsVisible)
   }
@@ -132,30 +138,50 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       // Handle error in payment processing (e.g., show an error
     }
   }
-  const getPedidosLocal = async () => {
+  const sellsByType = async () => {
     try {
-      const response = await fetch('/api/pedidos-caja', {
+      const response = await fetch('/api/sells', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       })
       if (!response.ok) {
-        throw new Error('caja chica failed')
+        throw new Error('Sells by type failed')
       }
       const result = await response.json()
-      setPedidosLocalData(result.response)
+      setSellByType(result)
       // Handle successful payment processing (e.g., show a success message, update UI)
     } catch (error) {
-      console.error('Error Pedidos Caja:', error)
+      console.error('Error venta por typo:', error)
       // Handle error in payment processing (e.g., show an error
     }
   }
+  // const getPedidosLocal = async () => {
+  //   try {
+  //     const response = await fetch('/api/pedidos-caja', {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     })
+  //     if (!response.ok) {
+  //       throw new Error('caja chica failed')
+  //     }
+  //     const result = await response.json()
+  //     setPedidosLocalData(result.response)
+  //     // Handle successful payment processing (e.g., show a success message, update UI)
+  //   } catch (error) {
+  //     console.error('Error Pedidos Caja:', error)
+  //     // Handle error in payment processing (e.g., show an error
+  //   }
+  // }
   useEffect(() => {
     cajaChica()
     getReviewOrders()
     sellsByEmployee()
-    getPedidosLocal()
+    sellsByType()
+    // getPedidosLocal()
   }, [getReviewOrders])
   // console.log(orders)
   const handleVolver = useCallback(() => {
@@ -205,7 +231,8 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
       // Call other post and get functions
       await cajaChica()
       await sellsByEmployee()
-      await getPedidosLocal()
+      await sellsByType()
+      // await getPedidosLocal()
       // Handle successful payment processing (e.g., show a success message, update UI)
     } catch (error) {
       console.error('Error processing payment:', error)
@@ -410,7 +437,12 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
           />
         </div>
         <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
-          {/* <TransactionResume /> */}
+          <TransactionResume
+            isTransactionResumeVisible={isTransactionResumeVisible}
+            handleTransactionResumeVisible={handleTransactionResumeVisible}
+            sellByType={sellByType}
+            updateSellsByType={sellsByType}
+          />
         </div>
       </div>
       <AprovalCards

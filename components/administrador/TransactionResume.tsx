@@ -3,65 +3,60 @@ import { Button, Divider } from '@nextui-org/react'
 import React, { useState } from 'react'
 
 const TransactionResume = ({
-  isEmployeeSellsVisible,
-  handleEmployeeSellsVisible,
-  employeeSells,
-  sellsByEmployee,
+  isTransactionResumeVisible,
+  handleTransactionResumeVisible,
+  sellByType,
+  updateSellsByType,
 }: {
-  isEmployeeSellsVisible: boolean
-  handleEmployeeSellsVisible: () => void
-  employeeSells: any
-  sellsByEmployee: () => void
+  isTransactionResumeVisible: boolean
+  handleTransactionResumeVisible: () => void
+  sellByType: any
+  updateSellsByType: () => void
 }) => {
-  const totalAmount = employeeSells
-    ? employeeSells.reduce(
-        (acc: number, curr: { total_amount: string }) =>
-          acc + parseFloat(curr.total_amount),
-        0
-      )
-    : 0
-  console.log(totalAmount)
+  // console.log(sellByType)
 
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
         Ventas Por Tipo
       </h2>
-      {!isEmployeeSellsVisible ? (
-        <Button onClick={() => handleEmployeeSellsVisible()}>
+      {!isTransactionResumeVisible ? (
+        <Button onClick={() => handleTransactionResumeVisible()}>
           Ver Ventas por Empleado
         </Button>
       ) : (
         <div className="space-y-1">
           <div className="text-sm font-medium">
-            <div className="grid grid-cols-4 gap-3">
-              <span className="col-span-2">Descripcion</span>
-              <span className="col-span-2">Valor</span>
+            <div className="grid grid-cols-6 gap-3 text-left">
+              <span className="col-span-2">Nombre</span>
+              <span className="col-span-2">Cantidad</span>
+              <span className="col-span-2">Total</span>
             </div>
           </div>
           <Divider />
-          {employeeSells && employeeSells.length > 0 ? (
-            <div className="space-y-2 ">
-              {employeeSells.map(
-                (employeeSell: {
-                  seller_id: string
-                  seller_name: string
-                  total_amount: number
+          {sellByType && sellByType.length > 0 ? (
+            <div className="space-y-2">
+              {sellByType.map(
+                (payment: {
+                  payment_method: string
+                  payment_count: string
+                  total_amount: string
                 }) => (
                   <div
-                    key={employeeSell.seller_id}
+                    key={payment.payment_method}
                     className="text-sm font-medium text-left"
                   >
                     <div className="grid grid-cols-4 gap-5">
-                      <span className="col-span-2 ">
+                      <span className="col-span-2">
                         <p className="text-xs">
-                          {capitalizeFirstLetter(employeeSell.seller_name)}
+                          {capitalizeFirstLetter(payment.payment_method)}
                         </p>
                       </span>
-                      <span className="col-span-2">
-                        <p>
-                          {formatCurrency(employeeSell.total_amount.toString())}
-                        </p>
+                      <span className="col-span-1">
+                        <p>{payment.payment_count}</p>
+                      </span>
+                      <span className="col-span-1">
+                        <p>{formatCurrency(payment.total_amount)}</p>
                       </span>
                     </div>
                   </div>
@@ -73,14 +68,23 @@ const TransactionResume = ({
           )}
           <Divider />
           <div className="grid grid-cols-4 gap-3">
-            <span className="col-span-2 font-semibold">Total</span>
-            <span className="col-span-2 font-semibold">
-              {employeeSells && formatCurrency(totalAmount.toString())}
+            <span className="col-span-2 font-semibold text-left">Total</span>
+            <span className="col-span-2 font-semibold text-right">
+              {sellByType &&
+                formatCurrency(
+                  sellByType
+                    .reduce(
+                      (acc: number, payment: { total_amount: string }) =>
+                        acc + parseFloat(payment.total_amount),
+                      0
+                    )
+                    .toString()
+                )}
             </span>
           </div>
           <div className="flex gap-3 justify-end">
-            <Button onClick={handleEmployeeSellsVisible}>Volver</Button>
-            <Button color="warning" onClick={sellsByEmployee}>
+            <Button onClick={handleTransactionResumeVisible}>Volver</Button>
+            <Button color="warning" onClick={updateSellsByType}>
               Actualizar
             </Button>
           </div>
