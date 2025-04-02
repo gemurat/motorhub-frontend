@@ -1,16 +1,26 @@
-import { userRole } from '@/actions/userRole'
+import TablaInventarioProductos from '@/components/inventario/TablaInventarioProductos'
 import { withPageAuthRequired } from '@auth0/nextjs-auth0'
-import { redirect } from 'next/navigation'
+
+const exampleTable = [
+  {
+    id: '1',
+    name: 'Macbook Pro M1 14" 512GB',
+    sku: 'MAC-09485',
+    category: 'Electronics',
+    supplier: 'Urban Deals',
+    stock: 20,
+    stock_status: 'Low',
+    unit_price: 1299,
+    image: '/images/macbook.jpg',
+  },
+]
 
 async function PricingPage() {
-  const roleUser = await userRole()
-  if (roleUser !== 'admin') {
-    return redirect('/inicio')
-  }
   return (
-    <div>
-      <h1>Inventario</h1>
-    </div>
+    <>
+      <TablaInventarioProductos />
+    </>
   )
 }
+
 export default withPageAuthRequired(PricingPage)

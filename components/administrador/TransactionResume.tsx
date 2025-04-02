@@ -2,7 +2,7 @@ import { capitalizeFirstLetter, formatCurrency } from '@/lib/utils'
 import { Button, Divider } from '@nextui-org/react'
 import React, { useState } from 'react'
 
-const EmployeeSells = ({
+const TransactionResume = ({
   isEmployeeSellsVisible,
   handleEmployeeSellsVisible,
   employeeSells,
@@ -25,7 +25,7 @@ const EmployeeSells = ({
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-        Ventas por Empleado
+        Ventas Por Tipo
       </h2>
       {!isEmployeeSellsVisible ? (
         <Button onClick={() => handleEmployeeSellsVisible()}>
@@ -35,8 +35,8 @@ const EmployeeSells = ({
         <div className="space-y-1">
           <div className="text-sm font-medium">
             <div className="grid grid-cols-4 gap-3">
-              <span className="col-span-2 text-left">Descripcion</span>
-              <span className="col-span-2 text-right">Valor</span>
+              <span className="col-span-2">Descripcion</span>
+              <span className="col-span-2">Valor</span>
             </div>
           </div>
           <Divider />
@@ -52,7 +52,7 @@ const EmployeeSells = ({
                     key={employeeSell.seller_id}
                     className="text-sm font-medium text-left"
                   >
-                    <div className="grid grid-cols-4 gap-5 text-right">
+                    <div className="grid grid-cols-4 gap-5">
                       <span className="col-span-2 ">
                         <p className="text-xs">
                           {capitalizeFirstLetter(employeeSell.seller_name)}
@@ -73,8 +73,8 @@ const EmployeeSells = ({
           )}
           <Divider />
           <div className="grid grid-cols-4 gap-3">
-            <span className="col-span-2 font-semibold text-left">Total</span>
-            <span className="col-span-2 font-semibold text-right">
+            <span className="col-span-2 font-semibold">Total</span>
+            <span className="col-span-2 font-semibold">
               {employeeSells && formatCurrency(totalAmount.toString())}
             </span>
           </div>
@@ -90,4 +90,4 @@ const EmployeeSells = ({
   )
 }
 
-export default EmployeeSells
+export default TransactionResume

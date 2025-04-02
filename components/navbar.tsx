@@ -14,9 +14,17 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { Logo } from '@/components/icons'
 import Logout from '@/app/logout'
 
-const Navbar = () => {
+const navBarItems = {
+  caja: ['ventas', 'reportes'],
+  vendedor: ['ventas'],
+  admin: ['ventas', 'caja', 'inventario', 'reportes', 'administrador'],
+}
+
+type RoleUser = keyof typeof navBarItems
+
+const Navbar = ({ roleUser = 'vendedor' }: { roleUser: RoleUser }) => {
   const { user, error, isLoading } = useUser()
-  console.log(user)
+  console.log(navBarItems[roleUser])
 
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>{error.message}</div>
@@ -34,30 +42,16 @@ const Navbar = () => {
               <p className="font-bold text-inherit">MotorHub</p>
             </NextLink>
           </NavbarBrand>
-          <NavbarItem>
-            <NextLink href="/ventas" className={clsx(linkStyles(), 'text-sm')}>
-              Ventas
-            </NextLink>
-          </NavbarItem>
-          <NavbarItem>
-            <NextLink
-              href="/inventario"
-              className={clsx(linkStyles(), 'text-sm')}
-            >
-              Inventario
-            </NextLink>
-          </NavbarItem>
-          <NavbarItem>
-            <NextLink
-              href="/reportes"
-              className={clsx(linkStyles(), 'text-sm')}
-            >
-              Reportes
-            </NextLink>
-          </NavbarItem>
-          <NavbarItem>
-            <Logout />
-          </NavbarItem>
+          {navBarItems[roleUser].map((item) => (
+            <NavbarItem key={item}>
+              <NextLink
+                href={`/${item}`}
+                className={clsx(linkStyles(), 'text-sm', 'text-white')}
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </NextLink>
+            </NavbarItem>
+          ))}
         </NavbarContent>
       ) : (
         <NavbarContent className="basis-1/5 sm:basis-full" justify="end">

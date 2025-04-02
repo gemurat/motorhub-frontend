@@ -5,7 +5,6 @@ import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { Providers } from './providers'
 import { siteConfig } from '@/config/site'
 import { fontSans } from '@/config/fonts'
-import Navbar from '@/components/navbar'
 
 export const metadata: Metadata = {
   title: {
@@ -41,15 +40,12 @@ export default function RootLayout({
           )}
         >
           <Providers themeProps={{ attribute: 'class', defaultTheme: 'dark' }}>
-            <div className="relative flex flex-col h-screen">
-              <Navbar />
-              <main className="container mx-auto max-w-8xl flex-grow">
-                {children}
-              </main>
-              <footer className="w-full flex items-center justify-center py-3">
-                Enero 2025
-              </footer>
-            </div>
+            <main className="relative flex flex-col h-screen container mx-auto flex-grow">
+              {children}
+            </main>
+            <footer className="w-full flex items-center justify-center py-3">
+              Enero 2025
+            </footer>
           </Providers>
         </body>
       </UserProvider>

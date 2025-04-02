@@ -6,6 +6,7 @@ import ProductReturnModal from '../caja/productReturnModal'
 import EmployeeSells from '../caja/EmployeeSells'
 import AprovalCards from './AprovalCards'
 import SidePayment from './SidePayment'
+import TransactionResume from './TransactionResume'
 const ORDER_STATES = [
   { id: 1, name: 'APPROVED' },
   { id: 2, name: 'REJECTED' },
@@ -93,6 +94,8 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
     useState<TransactionType | null>(null)
   const [isCajaChicaVisible, setIsCajaChicaVisible] = useState(false)
   const [isEmployeeSellsVisible, setIsEmployeeSellsVisible] = useState(false)
+  const [isTransactionResumeVisible, setIsTransactionResumeVisible] =
+    useState(false)
   const [selectedPedido, setSelectedPedido] = useState<selectedPedido>(null)
   const [pedidosLocalData, setPedidosLocalData] = useState<Pedido[]>([])
   const [validGiftcardValue, setValidGiftcardValue] = useState('')
@@ -106,6 +109,9 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [employeeSells, setEmployeeSells] = useState<EmployeeSell[]>([])
   const handleEmployeeSellsVisible = () => {
     setIsEmployeeSellsVisible(!isEmployeeSellsVisible)
+  }
+  const handleTransactionResumeVisible = () => {
+    setIsTransactionResumeVisible(!isTransactionResumeVisible)
   }
   const sellsByEmployee = async () => {
     try {
@@ -402,6 +408,9 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
             employeeSells={employeeSells}
             sellsByEmployee={sellsByEmployee}
           />
+        </div>
+        <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
+          {/* <TransactionResume /> */}
         </div>
       </div>
       <AprovalCards
