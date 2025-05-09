@@ -1,13 +1,8 @@
-import { title } from '@/components/primitives'
 import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import Dashboard from './components/Dashboard'
 
-async function AboutPage() {
-  return (
-    <div>
-      <h1 className={title()}>reportes</h1>
-      {/* <DonutChartLabelExample /> */}
-    </div>
-  )
-}
-
-export default withPageAuthRequired(AboutPage)
+export default withPageAuthRequired(async function Page() {
+  return <Dashboard />
+}, {
+  returnTo: '/reportes'
+})

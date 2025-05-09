@@ -1,115 +1,127 @@
-import React from 'react'
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-} from '@nextui-org/react' // Adjust the import according to your table library
+'use client'
 
-interface ShoppingCartProps {
-  addedProducts: Array<{
-    id: string
-    modelo: string
-    ano: string
-    parte: string
-    marca: string
-    existencia: string
-    measurements: string
-    precio1: number
-    cantidad: number
-  }>
-  removeProduct: (id: string) => void
-  removeAllProducts?: () => void
-  buyProducts?: () => void
-}
+import { Button, CircularProgress } from '@mui/material'
+import { PlusIcon } from '@/public/plusIcon'
+import MinusIcon from '@/public/minusIcon'
+import { useShoppingCart } from './ShoppingCartContext'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
-const getKeyValue = (item: any, key: string) => {
-  return item[key]
-}
+export default function ShoppingCart() {
+  const router = useRouter()
+  const {
+    addedProducts,
+    customerId,
+    loading,
+    handleIncrement,
+    handleDecrement,
+    handleRemove,
+    handlePagar,
+    handleCancelar,
+    setCustomerId,
+  } = useShoppingCart()
 
-const ShoppingCart: React.FC<ShoppingCartProps> = ({
-  addedProducts,
-  removeProduct,
-  removeAllProducts,
-  buyProducts,
-}) => {
-  const totalPrice = addedProducts.reduce(
-    (total, item) => total + item.precio1 * item.cantidad,
+  const total = addedProducts.reduce(
+    (sum, product) => sum + (product.precio1 || 0) * (product.cantidad || 0),
     0
   )
 
   return (
-    <div className="my-2 max-h-56 ">
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={buyProducts}
-          className="bg-green-500 text-white px-2 py-1 rounded"
+    <div className="bg-white p-4 rounded-lg shadow">
+      <h2 className="text-xl font-bold mb-4">Carrito de Compras</h2>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="ID del Cliente (opcional)"
+          value={customerId}
+          onChange={(e) => setCustomerId(e.target.value)}
+          className="w-full p-2 border rounded"
+          disabled={loading}
+        />
+        {!customerId && (
+          <p className="text-sm text-gray-500 mt-1">
+            Si no ingresa un ID, se usará el nombre del primer producto como
+            referencia
+          </p>
+        )}
+      </div>
+      <div className="space-y-4 max-h-[400px] overflow-y-auto">
+        {addedProducts.map((product) => (
+          <div
+            key={product.id}
+            className="flex items-center justify-between p-2 border rounded"
+          >
+            <div className="flex-1">
+              <p className="font-medium">{product.parte}</p>
+              <p className="text-sm text-gray-600">
+                {product.marca} - {product.modelo}
+              </p>
+              <p className="text-sm">
+                ${product.precio1.toLocaleString()} x {product.cantidad}
+              </p>
+              <p className="text-xs text-gray-500">
+                Stock disponible: {product.existencia}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => handleDecrement(product.id)}
+                disabled={product.cantidad <= 1 || loading}
+              >
+                <MinusIcon />
+              </Button>
+              <span className="w-8 text-center">{product.cantidad}</span>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => handleIncrement(product.id)}
+                disabled={
+                  !product.existencia ||
+                  parseInt(product.existencia) <= product.cantidad ||
+                  loading
+                }
+              >
+                <PlusIcon />
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => handleRemove(product.id)}
+                disabled={loading}
+              >
+                ×
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4">
+        <p className="text-lg font-bold">Total: ${total.toLocaleString()}</p>
+      </div>
+      <div className="flex flex-col gap-2 mt-4">
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={handlePagar}
+          disabled={addedProducts.length === 0 || loading}
+          startIcon={loading ? <CircularProgress size={20} /> : null}
         >
-          Ir a Pagar
-        </button>
-        <button className="bg-yellow-500 text-white px-2 py-1 rounded">
-          Cotizar
-        </button>
-        <button
-          onClick={removeAllProducts}
-          className="bg-red-500 text-white px-2 py-1 rounded"
+          {loading ? 'Creando Orden...' : 'Crear Orden'}
+        </Button>
+        <Button
+          variant="outlined"
+          color="error"
+          fullWidth
+          onClick={handleCancelar}
+          disabled={addedProducts.length === 0 || loading}
         >
           Cancelar
-        </button>
-      </div>
-      <Table aria-label="Added products table">
-        <TableHeader>
-          {/* <TableColumn key="id">ID</TableColumn> */}
-          {/* <TableColumn key="existencia">Existencia</TableColumn> */}
-          {/* <TableColumn key="measurements">Medida</TableColumn> */}
-          <TableColumn key="parte">Parte</TableColumn>
-          <TableColumn key="modelo">Modelo</TableColumn>
-          <TableColumn key="ano">Año</TableColumn>
-          <TableColumn key="marca">Marca</TableColumn>
-          <TableColumn key="precio1">Precio</TableColumn>
-          <TableColumn key="cantidad">Cantidad</TableColumn>
-          <TableColumn key="remove"> </TableColumn>
-        </TableHeader>
-        <TableBody items={addedProducts}>
-          {(item) => (
-            <TableRow key={item.id}>
-              {(columnKey) => (
-                <TableCell>
-                  {columnKey === 'precio1' ? (
-                    new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'CLP',
-                    }).format(item[columnKey])
-                  ) : columnKey === 'remove' ? (
-                    <button
-                      className="bg-red-500 text-white px-2 py-1 rounded"
-                      onClick={() => removeProduct(item.id)}
-                    >
-                      Eliminar
-                    </button>
-                  ) : (
-                    getKeyValue(item, columnKey as string)
-                  )}
-                </TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
-      <div className="flex justify-end">
-        <h3 className="text-right text-lg font-bold">
-          Total:{' '}
-          {new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'CLP',
-          }).format(totalPrice)}
-        </h3>
+        </Button>
       </div>
     </div>
   )
 }
-
-export default ShoppingCart

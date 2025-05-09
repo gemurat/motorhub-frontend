@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CashBoxMovements {
+  id                                        Int       @id @default(autoincrement())
+  cash_box_id                               Int
+  store_id                                  Int
+  type                                      String    @db.VarChar(10)
+  amount                                    Decimal   @db.Decimal(10, 2)
+  description                               String
+  date                                      DateTime  @db.Timestamp(6)
+  order_id                                  Int?
+  status                                    String    @default("PENDING") @db.VarChar(20)
+  created_by                                Int
+  approved_by                               Int?
+  approval_date                             DateTime? @db.Timestamp(6)
+  rejection_reason                          String?
+  Store                                     Store     @relation(fields: [store_id], references: [id])
+  Users_CashBoxMovements_approved_byToUsers Users?    @relation("CashBoxMovements_approved_byToUsers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  CashBoxes                                 CashBoxes @relation(fields: [cash_box_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Users_CashBoxMovements_created_byToUsers  Users     @relation("CashBoxMovements_created_byToUsers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Orders                                    Orders?   @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "fk_cashbox_movements_order")
+}
+
+model CashBoxes {
+  id               Int                @id @default(autoincrement())
+  store_id         Int
+  name             String             @db.VarChar(250)
+  current_balance  Decimal            @db.Decimal(10, 2)
+  last_updated     DateTime           @db.Timestamp(6)
+  status           String             @default("ACTIVE") @db.VarChar(50)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  Store            Store              @relation(fields: [store_id], references: [id])
+  CashBoxMovements CashBoxMovements[]
+}
+
+model Clients {
+  id        String      @id @default(uuid()) @db.VarChar(50)
+  name      String?     @db.VarChar(250)
+  email     String?     @db.VarChar(250)
+  phone     String?     @db.VarChar(50)
+  GiftCards GiftCards[]
+  Orders    Orders[]
+}
+
+model GiftCards {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique @db.VarChar(50)
+  customer_id String?   @db.VarChar(50)
+  balance     Decimal   @db.Decimal(10, 2)
+  issue_date  DateTime  @db.Timestamp(6)
+  expiry_date DateTime? @db.Timestamp(6)
+  status      String    @db.VarChar(50)
+  Clients     Clients?  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model LocalOrderItems {
+  id         Int      @id @default(autoincrement())
+  product_id Int
+  quantity   Int
+  unit_price Decimal  @db.Decimal(10, 2)
+  Products   Products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model LocalOrders {
+  id           Int       @id @default(autoincrement())
+  store_id     Int
+  order_date   DateTime  @default(now()) @db.Timestamp(6)
+  supplier_id  Int
+  total_amount Decimal   @db.Decimal(10, 2)
+  status       String    @db.VarChar(50)
+  vale         Int
+  Store        Store     @relation(fields: [store_id], references: [id])
+  Suppliers    Suppliers @relation(fields: [supplier_id], references: [id])
+}
+
+model OrderItems {
+  id         Int       @id @default(autoincrement())
+  order_id   Int?
+  product_id Int?
+  quantity   Int?
+  price      Decimal?  @db.Decimal(10, 2)
+  Orders     Orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Products   Products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Orders {
+  id               Int                @id @default(autoincrement())
+  store_id         Int
+  customer_id      String?            @db.VarChar(50)
+  order_date       DateTime?          @db.Timestamp(6)
+  total_amount     Decimal?           @db.Decimal(10, 2)
+  seller_id        Int?
+  status           String             @db.VarChar(50)
+  Store            Store              @relation(fields: [store_id], references: [id])
+  CashBoxMovements CashBoxMovements[]
+  OrderItems       OrderItems[]
+  Clients          Clients?           @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Users            Users?             @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Payments         Payments[]
+  Returns          Returns[]
+}
+
+model PaymentMethods {
+  id       Int        @id @default(autoincrement())
+  name     String     @db.VarChar(100)
+  Payments Payments[]
+}
+
+model Payments {
+  id                Int            @id @default(autoincrement())
+  order_id          Int
+  payment_method_id Int
+  amount            Decimal        @db.Decimal(10, 2)
+  date              DateTime       @db.Timestamp(6)
+  status            String?        @default("PENDING") @db.VarChar(50)
+  Orders            Orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  PaymentMethods    PaymentMethods @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ProductBrands {
+  id       Int        @id @default(autoincrement())
+  name     String?    @db.VarChar(250)
+  Products Products[]
+}
+
+model ProductCategories {
+  id       Int        @id @default(autoincrement())
+  name     String?    @db.VarChar(250)
+  Products Products[]
+}
+
+model ProductCompatibility {
+  id               Int            @id @default(autoincrement())
+  product_id       Int?
+  vehicle_model_id Int?
+  Products         Products?      @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  VehicleModels    VehicleModels? @relation(fields: [vehicle_model_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Products {
+  id                   Int                    @id @default(autoincrement())
+  internal_code        String?                @db.VarChar(250)
+  description          String?
+  price                Decimal?               @db.Decimal(10, 2)
+  stock                Int?
+  product_brand_id     Int?
+  product_category_id  Int?
+  measurements         String?                @db.VarChar(250)
+  brand_id             String?                @db.VarChar(250)
+  model_id             String?                @db.VarChar(250)
+  year                 String?                @db.VarChar(50)
+  moneda               String?                @db.VarChar(50)
+  codigo_parte         String?                @db.VarChar(250)
+  codigo_original      String?                @db.VarChar(250)
+  LocalOrderItems      LocalOrderItems[]
+  OrderItems           OrderItems[]
+  ProductCompatibility ProductCompatibility[]
+  ProductBrands        ProductBrands?         @relation(fields: [product_brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ProductCategories    ProductCategories?     @relation(fields: [product_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Returns              Returns[]
+}
+
+model Returns {
+  id          Int      @id @default(autoincrement())
+  order_id    Int
+  product_id  Int
+  quantity    Int
+  reason      String
+  return_date DateTime @db.Timestamp(6)
+  type        String   @db.VarChar(50)
+  Orders      Orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Products    Products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Suppliers {
+  id           Int           @id @default(autoincrement())
+  name         String?       @db.VarChar(250)
+  contact_info String?
+  LocalOrders  LocalOrders[]
+}
+
+model Store {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(250)
+  address          String?            @db.VarChar(500)
+  phone            String?            @db.VarChar(50)
+  email            String?            @db.VarChar(250)
+  status           String             @default("ACTIVE") @db.VarChar(50)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  CashBoxes        CashBoxes[]
+  Users            Users[]
+  Orders           Orders[]
+  LocalOrders      LocalOrders[]
+  CashBoxMovements CashBoxMovements[]
+}
+
+model Users {
+  id                                                   Int                @id @default(autoincrement())
+  username                                             String?            @db.VarChar(250)
+  password                                             String?            @db.VarChar(250)
+  email                                                String?            @unique @db.VarChar(250)
+  role                                                 String             @default("CASHIER") @db.VarChar(50)
+  status                                               String             @default("ACTIVE") @db.VarChar(50)
+  store_id                                             Int?
+  created_at                                           DateTime           @default(now())
+  updated_at                                           DateTime           @updatedAt
+  last_login                                           DateTime?          @db.Timestamp(6)
+  Store                                                Store?             @relation(fields: [store_id], references: [id])
+  CashBoxMovements_CashBoxMovements_approved_byToUsers CashBoxMovements[] @relation("CashBoxMovements_approved_byToUsers")
+  CashBoxMovements_CashBoxMovements_created_byToUsers  CashBoxMovements[] @relation("CashBoxMovements_created_byToUsers")
+  Orders                                               Orders[]
+}
+
+model VehicleBrands {
+  id            Int             @id @default(autoincrement())
+  name          String?         @db.VarChar(250)
+  VehicleModels VehicleModels[]
+}
+
+model VehicleModels {
+  id                   Int                    @id @default(autoincrement())
+  name                 String?                @db.VarChar(250)
+  vehicle_brand_id     Int?
+  ProductCompatibility ProductCompatibility[]
+  VehicleBrands        VehicleBrands?         @relation(fields: [vehicle_brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}

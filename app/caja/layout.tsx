@@ -4,8 +4,9 @@ export default function CajaLayout({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 w-full h-full">
-      <div className="w-full h-full text-center">{children}</div>
-    </section>
+    <div className="flex">
+      {/* Sidebar will be added here */}
+      <main className="flex-1 overflow-y-auto">{children}</main>
+    </div>
   )
 }

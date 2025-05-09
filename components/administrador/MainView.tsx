@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button } from '@nextui-org/react'
 import GiftCardModal from '../caja/GiftCardModal'
 import ProductReturnModal from '../caja/productReturnModal'
@@ -7,24 +7,16 @@ import EmployeeSells from '../caja/EmployeeSells'
 import AprovalCards from './AprovalCards'
 import SidePayment from './SidePayment'
 import TransactionResume from './TransactionResume'
-const ORDER_STATES = [
-  { id: 1, name: 'APPROVED' },
-  { id: 2, name: 'REJECTED' },
-]
-type Pedido = {
-  id: number
-  order_date: Date
-  supplier_id: number
-  vale: number
-  total_amount: number
-  status: string
-}
-type selectedPedido = Pedido | null
-interface PaymentMethod {
+import CashBox from '../caja/GastosCaja'
+import AprovalGastos from './AprovalGastos'
+
+// Types
+type PaymentMethod = {
   id: number
   name: string
 }
-interface Order {
+
+type Order = {
   id: number
   status: string
   customer_id: string
@@ -37,62 +29,111 @@ interface Order {
     quantity: number
   }[]
 }
-interface sellByType {
+
+type EmployeeSell = {
+  seller_id: string
+  seller_name: string
+  total_amount: number
+}
+
+type SellByType = {
   payment_method: string
   payment_count: number
   total_amount: number
 }
-type estadoPedido = 'PENDING' | 'COMPLETED' | 'CANCELLED'
+
 type TransactionType = 'expense' | 'income'
 
+type CashBoxData = {
+  current_balance: string
+  last_updated: string
+}
+
+type GastosData = {
+  id: number
+  description: string
+  amount: number
+  date: string
+  status: string
+  created_by_username: string
+}
+
+type APIResponse<T> = {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+type GastosResponse = {
+  success: boolean
+  response: GastosData[]
+}
+
+// Constants
+const ORDER_STATES = {
+  APPROVED: { id: 1, name: 'APPROVED' },
+  REJECTED: { id: 2, name: 'REJECTED' },
+} as const
+
+const API_ENDPOINTS = {
+  CASH_TRANSACTION: '/api/cash-transaction',
+  ORDER_PROCESS: '/api/order-process-review',
+  EMPLOYEE_SELLS: '/api/employee-sells',
+  SELLS: '/api/sells',
+  CANCEL_ORDER: '/api/cancel-order',
+  TRANSACTIONS_APPROVE: '/api/transactions/approve',
+  EXPENSES_APPROVE: '/api/expenses/approve',
+  CASH_REGISTER_OPERATIONS: '/api/cash-register/operations',
+} as const
+
+// Utility functions
+const fetchWithErrorHandling = async <T,>(
+  url: string,
+  options?: RequestInit
+): Promise<APIResponse<T>> => {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(
+        errorData.error || `HTTP error! status: ${response.status}`
+      )
+    }
+
+    const data = await response.json()
+    return { success: true, data }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'An unknown error occurred',
+    }
+  }
+}
+
 const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
-  const [paymentAmounts, setPaymentAmounts] = React.useState<{
+  // State
+  const [paymentAmounts, setPaymentAmounts] = useState<{
     [key: number]: number
   }>({})
   const [orders, setOrders] = useState<Order[]>([])
   const [currentBalance, setCurrentBalance] = useState('0.00')
   const [lastUpdatedBalance, setLastUpdatedBalance] = useState('')
-  const cajaChica = async () => {
-    try {
-      const response = await fetch('/api/cash-transaction', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('caja chica failed')
-      }
-
-      const result = await response.json()
-      setCurrentBalance(result.current_balance)
-      setLastUpdatedBalance(result.last_updated)
-      // Handle successful payment processing (e.g., show a success message, update UI)
-    } catch (error) {
-      console.error('Error Caja chica:', error)
-      // Handle error in payment processing (e.g., show an error
-    }
-  }
   const [loading, setLoading] = useState(true)
   const [paymentLoader, setPaymentLoader] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [selectedMedioPago, setSelectedMedioPago] = React.useState<
-    number | null
-  >(null)
-  const getReviewOrders = useCallback(async () => {
-    const response = await fetch('/api/order-process-review', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    const data = await response.json()
-    setOrders(data.orders)
-    setLoading(false)
-    return data
-  }, [])
-  // caja chica
+  const [listaGastosCaja, setListaGastosCaja] = useState<GastosData[]>([])
+  const [selectedMedioPago, setSelectedMedioPago] = useState<number | null>(
+    null
+  )
   const [cashboxAmount, setCashboxAmount] = useState('')
   const [cashBoxDescription, setCashBoxDescription] = useState('')
   const [transactionType, setTransactionType] =
@@ -101,310 +142,290 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
   const [isEmployeeSellsVisible, setIsEmployeeSellsVisible] = useState(false)
   const [isTransactionResumeVisible, setIsTransactionResumeVisible] =
     useState(false)
-  const [selectedPedido, setSelectedPedido] = useState<selectedPedido>(null)
-  const [pedidosLocalData, setPedidosLocalData] = useState<Pedido[]>([])
   const [validGiftcardValue, setValidGiftcardValue] = useState('')
-  interface EmployeeSell {
-    seller_id: string
-    seller_name: string
-    total_amount: number
-  }
-  const [nuevoEstadoPedido, setNuevoEstadoPedido] = useState('')
-
   const [employeeSells, setEmployeeSells] = useState<EmployeeSell[]>([])
-  const [sellByType, setSellByType] = useState<sellByType[]>([])
-  const handleEmployeeSellsVisible = () => {
-    setIsEmployeeSellsVisible(!isEmployeeSellsVisible)
-  }
-  const handleTransactionResumeVisible = () => {
-    setIsTransactionResumeVisible(!isTransactionResumeVisible)
-  }
-  const sellsByEmployee = async () => {
+  const [sellByType, setSellByType] = useState<SellByType[]>([])
+
+  // Memoized values
+  const pendingOrders = useMemo(
+    () => orders.filter((order) => order.status === 'PENDING'),
+    [orders]
+  )
+
+  const pendingGastos = useMemo(
+    () => listaGastosCaja.filter((gasto) => gasto.status === 'PENDING'),
+    [listaGastosCaja]
+  )
+
+  // API Calls
+  const fetchData = useCallback(async () => {
+    setLoading(true)
     try {
-      const response = await fetch('/api/employee-sells', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (!response.ok) {
-        throw new Error('caja chica failed')
+      const [
+        cajaChicaData,
+        ordersData,
+        employeeSellsData,
+        sellsByTypeData,
+        gastosData,
+      ] = await Promise.all([
+        fetchWithErrorHandling<CashBoxData>(API_ENDPOINTS.CASH_TRANSACTION),
+        fetchWithErrorHandling<{ orders: Order[] }>(
+          API_ENDPOINTS.ORDER_PROCESS
+        ),
+        fetchWithErrorHandling<EmployeeSell[]>(API_ENDPOINTS.EMPLOYEE_SELLS),
+        fetchWithErrorHandling<SellByType[]>(API_ENDPOINTS.SELLS),
+        fetchWithErrorHandling<GastosResponse>(
+          `${API_ENDPOINTS.CASH_TRANSACTION}?specialProp=gastos`
+        ),
+      ])
+
+      if (!cajaChicaData.success) {
+        throw new Error(cajaChicaData.error || 'Failed to fetch cash box data')
       }
-      const result = await response.json()
-      setEmployeeSells(result)
-      // Handle successful payment processing (e.g., show a success message, update UI)
-    } catch (error) {
-      console.error('Error Caja chica:', error)
-      // Handle error in payment processing (e.g., show an error
-    }
-  }
-  const sellsByType = async () => {
-    try {
-      const response = await fetch('/api/sells', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (!response.ok) {
-        throw new Error('Sells by type failed')
+      if (!ordersData.success) {
+        throw new Error(ordersData.error || 'Failed to fetch orders')
       }
-      const result = await response.json()
-      setSellByType(result)
-      // Handle successful payment processing (e.g., show a success message, update UI)
+      if (!employeeSellsData.success) {
+        throw new Error(
+          employeeSellsData.error || 'Failed to fetch employee sells'
+        )
+      }
+      if (!sellsByTypeData.success) {
+        throw new Error(
+          sellsByTypeData.error || 'Failed to fetch sells by type'
+        )
+      }
+      if (!gastosData.success) {
+        throw new Error(gastosData.error || 'Failed to fetch expenses')
+      }
+
+      if (cajaChicaData.data) {
+        setCurrentBalance(cajaChicaData.data.current_balance)
+        setLastUpdatedBalance(cajaChicaData.data.last_updated)
+      }
+
+      if (ordersData.data) {
+        setOrders(ordersData.data.orders)
+      }
+      if (employeeSellsData.data) {
+        setEmployeeSells(employeeSellsData.data)
+      }
+      if (sellsByTypeData.data) {
+        setSellByType(sellsByTypeData.data)
+      }
+      if (gastosData.data) {
+        setListaGastosCaja(gastosData.data.response)
+      }
     } catch (error) {
-      console.error('Error venta por typo:', error)
-      // Handle error in payment processing (e.g., show an error
+      console.error('Error fetching data:', error)
+      // TODO: Add error notification
+    } finally {
+      setLoading(false)
     }
-  }
-  // const getPedidosLocal = async () => {
-  //   try {
-  //     const response = await fetch('/api/pedidos-caja', {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     })
-  //     if (!response.ok) {
-  //       throw new Error('caja chica failed')
-  //     }
-  //     const result = await response.json()
-  //     setPedidosLocalData(result.response)
-  //     // Handle successful payment processing (e.g., show a success message, update UI)
-  //   } catch (error) {
-  //     console.error('Error Pedidos Caja:', error)
-  //     // Handle error in payment processing (e.g., show an error
-  //   }
-  // }
-  useEffect(() => {
-    cajaChica()
-    getReviewOrders()
-    sellsByEmployee()
-    sellsByType()
-    // getPedidosLocal()
-  }, [getReviewOrders])
-  // console.log(orders)
+  }, [])
+
+  // Handlers
   const handleVolver = useCallback(() => {
     setSelectedOrder(null)
     setSelectedMedioPago(null)
     setValidGiftcardValue('')
   }, [])
-  const addOrderToProcess = (order: Order) => {
+
+  const addOrderToProcess = useCallback((order: Order) => {
     setSelectedMedioPago(null)
     setValidGiftcardValue('')
     setSelectedOrder(order)
-    setValidGiftcardValue('')
-  }
+  }, [])
 
-  async function processPayment(order: any) {
-    if (!order) {
-      alert('No order to process')
-      return
-    }
-    console.log('Processing payment for order:', order, selectedMedioPago)
+  const addGastoToProcess = useCallback((gasto: GastosData) => {
+    console.log('Processing gasto:', gasto)
+  }, [])
 
+  const handleRefreshGastos = useCallback(async () => {
     try {
-      const response = await fetch('/api/order-process-review', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          newStatus:
-            selectedMedioPago !== null
-              ? ORDER_STATES[selectedMedioPago - 1].name
-              : 2, // Replace 0 with the appropriate index or logic
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Payment processing failed')
+      const data = await fetchWithErrorHandling<{
+        success: boolean
+        response: GastosData[]
+      }>(`${API_ENDPOINTS.CASH_TRANSACTION}?specialProp=gastos`)
+      if (data.success) {
+        setListaGastosCaja(data.response)
       }
-      const result = await response.json()
-      console.log('Payment processed successfully:', result)
-      if (result.success) {
-        setOrders((prevOrders) => prevOrders.filter((o) => o.id !== order.id))
+    } catch (error) {
+      console.error('Error refreshing gastos:', error)
+      // TODO: Add error notification
+    }
+  }, [])
+
+  const processPayment = useCallback(
+    async (order: Order) => {
+      if (!order) {
+        alert('No order to process')
+        return
+      }
+
+      setPaymentLoader(true)
+      try {
+        const newStatus =
+          selectedMedioPago !== null
+            ? ORDER_STATES.APPROVED.name
+            : ORDER_STATES.REJECTED.name
+
+        await fetchWithErrorHandling(API_ENDPOINTS.ORDER_PROCESS, {
+          method: 'PUT',
+          body: JSON.stringify({
+            orderId: order.id,
+            newStatus,
+          }),
+        })
+
+        setOrders((prev) => prev.filter((o) => o.id !== order.id))
         setSelectedOrder(null)
+        await fetchData()
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        // TODO: Add error notification
+      } finally {
+        setPaymentLoader(false)
       }
+    },
+    [selectedMedioPago, fetchData]
+  )
 
-      // Call other post and get functions
-      await cajaChica()
-      await sellsByEmployee()
-      await sellsByType()
-      // await getPedidosLocal()
-      // Handle successful payment processing (e.g., show a success message, update UI)
-    } catch (error) {
-      console.error('Error processing payment:', error)
-      // Handle error in payment processing (e.g., show an error message)
-    }
-  }
-  async function cancelPayment(order: any) {
-    if (!window.confirm('¿Estás seguro de que deseas cancelar este pedido?')) {
+  const cancelPayment = useCallback(async (order: Order) => {
+    if (!window.confirm('¿Estás seguro de que deseas cancelar este pedido?'))
       return
-    }
+
     try {
-      const response = await fetch('/api/cancel-order', {
+      await fetchWithErrorHandling(API_ENDPOINTS.CANCEL_ORDER, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-        }),
+        body: JSON.stringify({ orderId: order.id }),
       })
 
-      if (!response.ok) {
-        throw new Error('Payment processing failed')
-      }
-
-      const result = await response.json()
-      console.log('Payment processed successfully:', result)
-      if (result.success) {
-        setOrders((prevOrders) => prevOrders.filter((o) => o.id !== order.id))
-        setSelectedOrder(null)
-      }
-      // Handle successful payment processing (e.g., show a success message, update UI)
+      setOrders((prev) => prev.filter((o) => o.id !== order.id))
+      setSelectedOrder(null)
     } catch (error) {
-      console.error('Error processing payment:', error)
-      // Handle error in payment processing (e.g., show an error message)
+      console.error('Error canceling payment:', error)
+      // TODO: Add error notification
     }
-  }
-  const handleCashboxAmountChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setCashboxAmount(e.target.value)
-  }
+  }, [])
 
-  const handleDescriptionChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => {
-    setCashBoxDescription(e.target.value)
-  }
-
-  const handleTransactionTypeChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setTransactionType(e.target.value as TransactionType)
-  }
-  const handleCashboxSubmit = async () => {
-    if (!transactionType || !cashboxAmount || !cashBoxDescription) {
-      alert('Please fill in all fields before submitting.')
-      return
-    }
-    try {
-      const response = await fetch('/api/cash-transaction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: transactionType,
-          amount: cashboxAmount,
-          description: cashBoxDescription,
-        }),
-      })
-      if (!response.ok) {
-        throw new Error('Payment processing failed')
-      }
-
-      const result = await response.json()
-      console.log('Payment processed successfully:', result)
-      if (result.success) {
-        setCashboxAmount('')
-        setCashBoxDescription('')
-        setTransactionType(null)
-        setIsCajaChicaVisible(false)
-        cajaChica()
-      }
-    } catch (error) {
-      console.error('Error processing payment:', error)
-      // Handle error in payment processing (e.g., show an error message)
-    }
-  }
-  const handleCashboxVolver = () => {
-    setCashboxAmount('')
-    setCashBoxDescription('')
-    setTransactionType(null)
-    setIsCajaChicaVisible(false)
-  }
-  const handleSelectedPedido = (pedido: Pedido) => {
-    console.log(pedido)
-    setSelectedPedido(pedido)
-  }
-  const handleVolverPedido = () => {
-    setSelectedPedido(null)
-  }
-  const handleActualizarEstadoPedido = async (pedido: Pedido) => {
-    try {
-      const response = await fetch('/api/pedidos-caja', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: pedido,
-          status: nuevoEstadoPedido,
-        }),
-      })
-      if (!response.ok) {
-        throw new Error('Error updating pedido')
-      }
-      const result = await response.json()
-      console.log('Pedido updated successfully:', result)
-      if (result.success) {
-        setNuevoEstadoPedido('')
-        setSelectedPedido(null)
-        setPedidosLocalData((prevPedidos) =>
-          prevPedidos.map((p) => (p.id === pedido.id ? pedido : p))
-        )
-        setSelectedPedido(null)
-        window.location.reload()
-      }
-    } catch (error) {
-      setNuevoEstadoPedido('')
-      setSelectedPedido(null)
-      console.error('Error updating pedido:', error)
-    }
-  }
-  const handleSelectOrderStatus = (status: string) => {
-    setNuevoEstadoPedido(status)
-  }
-  const handleValidateGiftcard = async (giftCardCode: string) => {
-    console.log('Buscando GiftCard por cliente:', giftCardCode)
+  const handleValidateGiftcard = useCallback(async (giftCardCode: string) => {
     try {
       const response = await fetch(
-        `/api/giftcard-validator?giftcardcode=${giftCardCode}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        `/api/giftcard-validator?giftcardcode=${giftCardCode}`
       )
+      if (!response.ok) throw new Error('Error validating gift card')
 
-      if (!response.ok) {
-        throw new Error('Error buscando GiftCard')
-      }
       const result = await response.json()
-      console.log('GiftCard encontrado:', result.data.balance)
       if (result.success && result.data) {
-        console.log(result.data)
         setValidGiftcardValue(result.data.balance)
       }
     } catch (error) {
-      console.error('Error buscando GiftCard:', error)
+      console.error('Error validating gift card:', error)
+      // TODO: Add error notification
+    }
+  }, [])
+
+  const handleApproveTransaction = async (
+    transactionId: number,
+    approved: boolean,
+    notes: string
+  ) => {
+    try {
+      const response = await fetchWithErrorHandling<{ success: boolean }>(
+        API_ENDPOINTS.TRANSACTIONS_APPROVE,
+        {
+          method: 'POST',
+          body: JSON.stringify({ transactionId, approved, notes }),
+        }
+      )
+
+      if (response.success) {
+        await fetchData() // Refresh data
+      }
+    } catch (error) {
+      console.error('Error approving transaction:', error)
     }
   }
+
+  const handleApproveExpense = async (
+    expenseId: number,
+    approved: boolean,
+    notes: string
+  ) => {
+    try {
+      const response = await fetchWithErrorHandling<{ success: boolean }>(
+        API_ENDPOINTS.EXPENSES_APPROVE,
+        {
+          method: 'POST',
+          body: JSON.stringify({ expenseId, approved, notes }),
+        }
+      )
+
+      if (response.success) {
+        await fetchData() // Refresh data
+      }
+    } catch (error) {
+      console.error('Error approving expense:', error)
+    }
+  }
+
+  const handleCashRegisterOperation = async (
+    store_id: number,
+    cash_register_id: number,
+    operation_type: 'DEPOSIT' | 'WITHDRAWAL',
+    amount: number,
+    description: string,
+    notes: string
+  ) => {
+    try {
+      const response = await fetchWithErrorHandling<{ success: boolean }>(
+        API_ENDPOINTS.CASH_REGISTER_OPERATIONS,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            store_id,
+            cash_register_id,
+            operation_type,
+            amount,
+            description,
+            notes,
+          }),
+        }
+      )
+
+      if (response.success) {
+        await fetchData() // Refresh data
+      }
+    } catch (error) {
+      console.error('Error performing cash register operation:', error)
+    }
+  }
+
+  // Effects
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // UI Handlers
+  const handleEmployeeSellsVisible = useCallback(() => {
+    setIsEmployeeSellsVisible((prev) => !prev)
+  }, [])
+
+  const handleTransactionResumeVisible = useCallback(() => {
+    setIsTransactionResumeVisible((prev) => !prev)
+  }, [])
+
   return (
     <div className="flex">
       <div className="h-full w-1/4 space-y-4">
         <div className="flex justify-between gap-4">
           <GiftCardModal />
           <ProductReturnModal />
-          <Button onClick={getReviewOrders}>Actualizar</Button>
+          <Button onClick={fetchData}>Actualizar</Button>
         </div>
-        <div className=" w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
+
+        <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
           {paymentLoader ? (
             <p>Procesando Pago...</p>
           ) : selectedOrder ? (
@@ -418,40 +439,58 @@ const MainSection = ({ mediosPago }: { mediosPago: PaymentMethod[] }) => {
               handleVolver={handleVolver}
               selectedMedioPago={selectedMedioPago}
               setSelectedMedioPago={setSelectedMedioPago}
-              processPayment={async (order) => {
-                setPaymentLoader(true)
-                await processPayment(order)
-                setPaymentLoader(false)
-              }}
+              processPayment={processPayment}
             />
           ) : (
             <p>Seleccione Orden para Procesar</p>
           )}
         </div>
+
         <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
           <EmployeeSells
             isEmployeeSellsVisible={isEmployeeSellsVisible}
             handleEmployeeSellsVisible={handleEmployeeSellsVisible}
             employeeSells={employeeSells}
-            sellsByEmployee={sellsByEmployee}
+            sellsByEmployee={fetchData}
           />
         </div>
+
         <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
           <TransactionResume
             isTransactionResumeVisible={isTransactionResumeVisible}
             handleTransactionResumeVisible={handleTransactionResumeVisible}
             sellByType={sellByType}
-            updateSellsByType={sellsByType}
+            updateSellsByType={fetchData}
           />
         </div>
+
+        <div className="w-full p-4 bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-lg">
+          Administrar Caja Chica
+        </div>
       </div>
-      <AprovalCards
-        selectedOrder={selectedOrder}
-        loading={loading}
-        orders={orders}
-        addOrderToProcess={addOrderToProcess}
-        cancelPayment={cancelPayment}
-      />
+
+      <div className="w-full">
+        <AprovalCards
+          loading={loading}
+          orders={orders}
+          selectedOrder={selectedOrder}
+          cancelPayment={cancelPayment}
+          addOrderToProcess={addOrderToProcess}
+          onApproveTransaction={handleApproveTransaction}
+        />
+        <AprovalGastos
+          loading={loading}
+          gastos={pendingGastos}
+          onApproveExpense={handleApproveExpense}
+        />
+        <TransactionResume
+          loading={loading}
+          orders={orders}
+          employeeSells={employeeSells}
+          sellByType={sellByType}
+          onCashRegisterOperation={handleCashRegisterOperation}
+        />
+      </div>
     </div>
   )
 }

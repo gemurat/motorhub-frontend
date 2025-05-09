@@ -1,20 +1,21 @@
 import '@/styles/globals.css'
 import { Metadata, Viewport } from 'next'
 import clsx from 'clsx'
-import { UserProvider } from '@auth0/nextjs-auth0/client'
-import { Providers } from './providers'
-import { siteConfig } from '@/config/site'
+import { headers } from 'next/headers'
+import { validateEnv } from '@/utils/env'
 import { fontSans } from '@/config/fonts'
+import { siteConfig } from '@/config/site'
+import ClientLayout from '@/components/ClientLayout'
+import AuthProvider from '@/components/AuthProvider'
+import { UserProvider } from '@auth0/nextjs-auth0/client'
+import { Providers } from '@/components/providers'
+
+// Validate environment variables
+validateEnv()
 
 export const metadata: Metadata = {
-  title: {
-    default: siteConfig.name,
-    template: `%s - ${siteConfig.name}`,
-  },
+  title: siteConfig.name,
   description: siteConfig.description,
-  icons: {
-    icon: '/favicon.ico',
-  },
 }
 
 export const viewport: Viewport = {
@@ -30,25 +31,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html suppressHydrationWarning lang="en">
-      <UserProvider>
-        <head />
-        <body
-          className={clsx(
-            'min-h-screen bg-background font-sans antialiased',
-            fontSans.variable
-          )}
-        >
-          <Providers themeProps={{ attribute: 'class', defaultTheme: 'dark' }}>
-            <main className="relative flex flex-col h-screen container mx-auto flex-grow">
-              {children}
-            </main>
-            <footer className="w-full flex items-center justify-center py-3">
-              Enero 2025
-            </footer>
-          </Providers>
-        </body>
-      </UserProvider>
+    <html lang="es" suppressHydrationWarning>
+      <head />
+      <body
+        className={clsx(
+          'min-h-screen bg-background font-sans antialiased',
+          fontSans.variable
+        )}
+      >
+        <Providers>
+          <UserProvider>
+            <AuthProvider>
+              <ClientLayout>{children}</ClientLayout>
+            </AuthProvider>
+          </UserProvider>
+        </Providers>
+      </body>
     </html>
   )
 }

@@ -1,16 +1,14 @@
 import { withPageAuthRequired } from '@auth0/nextjs-auth0'
-import OrderSection from '@/components/caja/Orders'
-import { fetchMediosPago } from '../api/dataFetcher'
+import CashRegister from '@/components/caja/CashRegister'
 
-async function Caja() {
-  const mediosPago = await fetchMediosPago()
-
+async function CajaPage() {
   return (
-    <>
-      <div>
-        <OrderSection mediosPago={mediosPago} />
+    <main className="flex min-h-screen flex-col bg-gray-100">
+      <div className="flex-1 p-4">
+        <CashRegister />
       </div>
-    </>
+    </main>
   )
 }
-export default withPageAuthRequired(Caja)
+
+export default withPageAuthRequired(CajaPage)

@@ -1,49 +1,38 @@
-import { getUsersRoles } from './getUsersRoles'
-import { query } from '@/db'
+'use server'
+
 import { getSession } from '@auth0/nextjs-auth0'
+import prisma from '@/lib/prisma'
 
-export async function userRole() {
-  const session = await getSession()
-  const userRole = await getUsersRoles()
+// Define types for better type safety
+type UserRole = 'vendedor' | 'admin' | 'CAJERO' | 'unknown'
 
-  // Insert authenticated user data into the PostgreSQL database
+export async function userRole(): Promise<UserRole> {
   try {
-    const result = await query(
-      `SELECT * FROM public."Users" WHERE username = $1`,
-      [session?.user.email]
-    )
-    if (
-      result.rows.length === 0 &&
-      userRole.caja !== undefined &&
-      userRole.caja > 0
-    ) {
-      await query(
-        `INSERT INTO public."Users" (username, role, caja) VALUES ($1, $2, $3)`,
-        [session?.user.email, userRole.roles[0].name, userRole.caja]
-      )
-    } else if (result.rows.length === 0) {
-      await query(
-        `INSERT INTO public."Users" (username, role) VALUES ($1, $2)`,
-        [session?.user.email, userRole.roles[0].name]
-      )
+    const session = await getSession()
+    if (!session?.user?.email) {
+      return 'unknown'
     }
-  } catch (error) {
-    console.error(error)
-  }
 
-  if (
-    userRole.roles.some((role) => role.name.toLocaleLowerCase() === 'vendedor')
-  ) {
-    return 'vendedor'
-  } else if (
-    userRole.roles.some((role) => role.name.toLocaleLowerCase() === 'admin')
-  ) {
-    return 'admin'
-  } else if (
-    userRole.roles.some((role) => role.name.toLocaleLowerCase() === 'caja')
-  ) {
-    return 'caja'
-  } else {
+    // Get role directly from database
+    const user = await prisma.users.findFirst({
+      where: {
+        email: session.user.email,
+      },
+      select: {
+        role: true,
+      },
+    })
+
+    console.log('User role from DB:', user?.role) // Debug log
+
+    if (!user?.role) {
+      return 'unknown'
+    }
+
+    // Return the role exactly as it is in the database
+    return user.role as UserRole
+  } catch (error) {
+    console.error('Error getting user role:', error)
     return 'unknown'
   }
 }

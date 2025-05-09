@@ -1,35 +1,34 @@
 import { NextResponse } from 'next/server'
-import { query } from '@/db'
+import { prisma } from '@/lib/prisma'
+import type { GiftCards } from '@/lib/generated/prisma'
 
 export const GET = async (req: Request) => {
   try {
     const url = new URL(req.url)
     const giftCardCode = url.searchParams.get('giftcardcode')
-    let result
-    if (giftCardCode) {
-      console.log('search by id:', giftCardCode)
 
-      result = await query(
-        `SELECT * FROM public."GiftCards" WHERE code = $1 AND status = 'ACTIVE'`,
-        [`${giftCardCode}`]
-      )
-      if (result.rows.length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'No gift cards found' },
-          { status: 404 }
-        )
-      } else {
-        return NextResponse.json(
-          { success: true, data: result.rows[0] },
-          { status: 200 }
-        )
-      }
-    } else {
+    if (!giftCardCode) {
       return NextResponse.json(
         { success: false, error: 'No code found' },
         { status: 400 }
       )
     }
+
+    const giftCard = await prisma.giftCards.findFirst({
+      where: {
+        code: giftCardCode,
+        status: 'ACTIVE',
+      },
+    })
+
+    if (!giftCard) {
+      return NextResponse.json(
+        { success: false, error: 'No gift cards found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ success: true, data: giftCard }, { status: 200 })
   } catch (error) {
     console.error('Database error:', error)
     return NextResponse.json(

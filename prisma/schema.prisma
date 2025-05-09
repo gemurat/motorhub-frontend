@@ -1,0 +1,588 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CashBoxMovements {
+  id                                        Int       @id @default(autoincrement())
+  cash_box_id                               Int
+  store_id                                  Int
+  type                                      String    @db.VarChar(10)
+  amount                                    Decimal   @db.Decimal(10, 2)
+  description                               String
+  date                                      DateTime  @db.Timestamp(6)
+  order_id                                  Int?
+  status                                    String    @default("PENDING") @db.VarChar(20)
+  created_by                                Int
+  approved_by                               Int?
+  approval_date                             DateTime? @db.Timestamp(6)
+  rejection_reason                          String?
+  Users_CashBoxMovements_approved_byToUsers Users?    @relation("CashBoxMovements_approved_byToUsers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  CashBoxes                                 CashBoxes @relation(fields: [cash_box_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Users_CashBoxMovements_created_byToUsers  Users     @relation("CashBoxMovements_created_byToUsers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Store                                     Store     @relation(fields: [store_id], references: [id])
+  Orders                                    Orders?   @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "fk_cashbox_movements_order")
+}
+
+model CashBoxes {
+  id                        Int                         @id @default(autoincrement())
+  local_name                String                      @db.VarChar(250)
+  current_balance           Decimal                     @db.Decimal(10, 2)
+  last_updated              DateTime                    @db.Timestamp(6)
+  store_id                  Int
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  CashBoxMovements          CashBoxMovements[]
+  Store                     Store                       @relation(fields: [store_id], references: [id])
+  StoreCashRegisterSettings StoreCashRegisterSettings[]
+  Users                     Users[]                     @relation("UserCashBoxes")
+}
+
+model Clients {
+  id        String      @id @default(uuid()) @db.VarChar(50)
+  name      String?     @db.VarChar(250)
+  email     String?     @db.VarChar(250)
+  phone     String?     @db.VarChar(50)
+  GiftCards GiftCards[]
+  Orders    Orders[]
+}
+
+model GiftCards {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique @db.VarChar(50)
+  customer_id String?   @db.VarChar(50)
+  balance     Decimal   @db.Decimal(10, 2)
+  issue_date  DateTime  @db.Timestamp(6)
+  expiry_date DateTime? @db.Timestamp(6)
+  status      String    @db.VarChar(50)
+  Clients     Clients?  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model LocalOrderItems {
+  id         Int      @id @default(autoincrement())
+  product_id Int
+  quantity   Int
+  unit_price Decimal  @db.Decimal(10, 2)
+  Products   Products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model LocalOrders {
+  id           Int       @id @default(autoincrement())
+  order_date   DateTime  @default(now()) @db.Timestamp(6)
+  supplier_id  Int
+  total_amount Decimal   @db.Decimal(10, 2)
+  status       String    @db.VarChar(50)
+  vale         Int
+  store_id     Int
+  Store        Store     @relation(fields: [store_id], references: [id])
+  Suppliers    Suppliers @relation(fields: [supplier_id], references: [id])
+}
+
+model OrderItems {
+  id         Int       @id @default(autoincrement())
+  order_id   Int?
+  product_id Int?
+  quantity   Int?
+  price      Decimal?  @db.Decimal(10, 2)
+  Orders     Orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Products   Products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Orders {
+  id               Int                @id @default(autoincrement())
+  store_id         Int
+  customer_id      String?            @db.VarChar(50)
+  order_date       DateTime?          @db.Timestamp(6)
+  total_amount     Decimal?           @db.Decimal(10, 2)
+  seller_id        Int?
+  status           String             @db.VarChar(50)
+  order_type       String             @default("REGULAR") @db.VarChar(50)
+  payment_status   String             @default("PENDING") @db.VarChar(50)
+  delivery_status  String?            @db.VarChar(50)
+  notes            String?            @db.VarChar(1000)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  CashBoxMovements CashBoxMovements[]
+  OrderHistory     OrderHistory[]
+  OrderItems       OrderItems[]
+  Clients          Clients?           @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Users            Users?             @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Store            Store              @relation(fields: [store_id], references: [id])
+  Payments         Payments[]
+  Returns          Returns[]
+}
+
+model OrderHistory {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  status     String   @db.VarChar(50)
+  notes      String?  @db.VarChar(500)
+  created_by Int
+  created_at DateTime @default(now())
+  Users      Users    @relation(fields: [created_by], references: [id])
+  Orders     Orders   @relation(fields: [order_id], references: [id])
+}
+
+model PaymentMethods {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  requires_approval   Boolean               @default(false)
+  affects_cashbox     Boolean               @default(true)
+  Payments            Payments[]
+  StorePaymentMethods StorePaymentMethods[]
+}
+
+model Payments {
+  id                Int            @id @default(autoincrement())
+  order_id          Int
+  payment_method_id Int
+  amount            Decimal        @db.Decimal(10, 2)
+  date              DateTime       @db.Timestamp(6)
+  status            String         @default("PENDING") @db.VarChar(50)
+  approval_date     DateTime?      @db.Timestamp(6)
+  approved_by       Int?
+  rejection_reason  String?        @db.VarChar(500)
+  ApprovedBy        Users?         @relation("Payments_approved_byToUsers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Orders            Orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  PaymentMethods    PaymentMethods @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ProductBrands {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  Products   Products[]
+}
+
+model ProductCategories {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  Products   Products[]
+}
+
+model ProductCompatibility {
+  id               Int            @id @default(autoincrement())
+  product_id       Int?
+  vehicle_model_id Int?
+  Products         Products?      @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  VehicleModels    VehicleModels? @relation(fields: [vehicle_model_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Products {
+  id                    Int                    @id @default(autoincrement())
+  internal_code         String?                @db.VarChar(250)
+  description           String?
+  price                 Decimal?               @db.Decimal(10, 2)
+  product_brand_id      Int?
+  product_category_id   Int?
+  measurements          String?                @db.VarChar(250)
+  brand_id              String?                @db.VarChar(250)
+  model_id              String?                @db.VarChar(250)
+  year                  String?                @db.VarChar(50)
+  moneda                String?                @db.VarChar(50)
+  codigo_parte          String?                @db.VarChar(250)
+  codigo_original       String?                @db.VarChar(250)
+  status                String                 @default("ACTIVE") @db.VarChar(50)
+  created_at            DateTime               @default(now())
+  updated_at            DateTime               @updatedAt
+  InventorySummaryViews InventorySummaryView[]
+  LocalOrderItems       LocalOrderItems[]
+  LowStockAlertViews    LowStockAlertView[]
+  OrderItems            OrderItems[]
+  OverstockAlertViews   OverstockAlertView[]
+  ProductBatches        ProductBatches[]
+  ProductCompatibility  ProductCompatibility[]
+  ProductBrands         ProductBrands?         @relation(fields: [product_brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ProductCategories     ProductCategories?     @relation(fields: [product_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Returns               Returns[]
+  StockAlerts           StockAlerts[]          @relation("ProductStockAlerts")
+  StockMovements        StockMovements[]
+  StoreInventory        StoreInventory[]
+  StoreProductPricing   StoreProductPricing[]
+
+  @@index([status])
+  @@index([internal_code])
+}
+
+model StoreInventory {
+  id                  Int                   @id @default(autoincrement())
+  store_id            Int
+  product_id          Int
+  quantity            Int                   @default(0)
+  reserved_quantity   Int                   @default(0)
+  min_stock           Int?
+  max_stock           Int?
+  available_stock     Int                   @default(0)
+  status              String                @default("ACTIVE")
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @updatedAt
+  StockAlerts         StockAlerts?
+  Products            Products              @relation(fields: [product_id], references: [id])
+  Store               Store                 @relation(fields: [store_id], references: [id])
+  StoreInventoryAudit StoreInventoryAudit[]
+  StoreInventoryBatch StoreInventoryBatch[]
+  StockMovements      StockMovements[]      @relation("StoreInventoryStockMovements")
+
+  @@unique([store_id, product_id])
+  @@index([store_id, status])
+  @@index([product_id, status])
+}
+
+model Returns {
+  id          Int      @id @default(autoincrement())
+  order_id    Int
+  product_id  Int
+  quantity    Int
+  reason      String
+  return_date DateTime @db.Timestamp(6)
+  type        String   @db.VarChar(50)
+  Orders      Orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Products    Products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Suppliers {
+  id           Int           @id @default(autoincrement())
+  name         String?       @db.VarChar(250)
+  contact_info String?
+  LocalOrders  LocalOrders[]
+}
+
+model Users {
+  id                                                   Int                   @id @default(autoincrement())
+  username                                             String?               @db.VarChar(250)
+  email                                                String                @unique @db.VarChar(250)
+  role                                                 String                @db.VarChar(50)
+  status                                               String                @default("ACTIVE") @db.VarChar(50)
+  store_id                                             Int?
+  created_at                                           DateTime              @default(now())
+  updated_at                                           DateTime              @updatedAt
+  last_login                                           DateTime?             @db.Timestamp(6)
+  permissions                                          String?               @db.VarChar(1000)
+  is_super_admin                                       Boolean               @default(false)
+  cashbox_id                                           Int?
+  auth0_id                                             String                @unique @db.VarChar(255)
+  first_name                                           String?               @db.VarChar(250)
+  last_name                                            String?               @db.VarChar(250)
+  phone                                                String?               @db.VarChar(50)
+  CashBoxMovements_CashBoxMovements_approved_byToUsers CashBoxMovements[]    @relation("CashBoxMovements_approved_byToUsers")
+  CashBoxMovements_CashBoxMovements_created_byToUsers  CashBoxMovements[]    @relation("CashBoxMovements_created_byToUsers")
+  OrderHistory                                         OrderHistory[]
+  Orders                                               Orders[]
+  ApprovedPayments                                     Payments[]            @relation("Payments_approved_byToUsers")
+  StockMovementAudits                                  StockMovementAudit[]
+  StockMovements                                       StockMovements[]      @relation("UserStockMovements")
+  StoreInventoryAudits                                 StoreInventoryAudit[]
+  UserStoreAccess                                      UserStoreAccess[]
+  CashBoxes                                            CashBoxes?            @relation("UserCashBoxes", fields: [cashbox_id], references: [id])
+  Store                                                Store?                @relation(fields: [store_id], references: [id])
+
+  @@index([email])
+  @@index([auth0_id])
+  @@index([role])
+  @@index([status])
+  @@index([store_id])
+  @@index([cashbox_id])
+}
+
+model UserStoreAccess {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  store_id   Int
+  role       String   @db.VarChar(50)
+  status     String   @default("ACTIVE") @db.VarChar(50)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Store      Store    @relation(fields: [store_id], references: [id])
+  Users      Users    @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, store_id])
+}
+
+model VehicleBrands {
+  id            Int             @id @default(autoincrement())
+  name          String?         @db.VarChar(250)
+  VehicleModels VehicleModels[]
+}
+
+model VehicleModels {
+  id                   Int                    @id @default(autoincrement())
+  name                 String?                @db.VarChar(250)
+  vehicle_brand_id     Int?
+  ProductCompatibility ProductCompatibility[]
+  VehicleBrands        VehicleBrands?         @relation(fields: [vehicle_brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Store {
+  id                        Int                         @id @default(autoincrement())
+  name                      String                      @db.VarChar(250)
+  address                   String?                     @db.VarChar(500)
+  phone                     String?                     @db.VarChar(50)
+  email                     String?                     @db.VarChar(250)
+  status                    String                      @default("ACTIVE") @db.VarChar(50)
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  timezone                  String                      @default("UTC") @db.VarChar(50)
+  currency                  String                      @default("USD") @db.VarChar(10)
+  tax_rate                  Decimal                     @default(0) @db.Decimal(5, 2)
+  logo_url                  String?                     @db.VarChar(500)
+  business_hours            String?                     @db.VarChar(500)
+  parent_store_id           Int?
+  is_warehouse              Boolean                     @default(false)
+  storage_capacity          Int?
+  storage_units             String?                     @db.VarChar(50)
+  type                      String                      @default("STORE") @db.VarChar(50)
+  CashBoxMovements          CashBoxMovements[]
+  CashBoxes                 CashBoxes[]
+  InventorySummaryViews     InventorySummaryView[]
+  LocalOrders               LocalOrders[]
+  LowStockAlertViews        LowStockAlertView[]
+  Orders                    Orders[]
+  OverstockAlertViews       OverstockAlertView[]
+  StockAlerts               StockAlerts[]
+  StockMovementsFrom        StockMovements[]            @relation("FromStore")
+  StockMovementsTo          StockMovements[]            @relation("ToStore")
+  ParentStore               Store?                      @relation("StoreHierarchy", fields: [parent_store_id], references: [id])
+  ChildStores               Store[]                     @relation("StoreHierarchy")
+  StoreCashRegisterSettings StoreCashRegisterSettings[]
+  StoreInventory            StoreInventory[]
+  StorePaymentMethods       StorePaymentMethods[]
+  StoreProductPricing       StoreProductPricing[]
+  StorePromotions           StorePromotions[]
+  StoreReports              StoreReports[]
+  UserStoreAccess           UserStoreAccess[]
+  Users                     Users[]
+  WarehouseZones            WarehouseZone[]
+
+  @@index([status])
+  @@index([is_warehouse])
+}
+
+model StoreProductPricing {
+  id         Int       @id @default(autoincrement())
+  store_id   Int
+  product_id Int
+  price      Decimal   @db.Decimal(10, 2)
+  start_date DateTime  @default(now())
+  end_date   DateTime?
+  Products   Products  @relation(fields: [product_id], references: [id])
+  Store      Store     @relation(fields: [store_id], references: [id])
+
+  @@unique([store_id, product_id, start_date])
+}
+
+model StorePaymentMethods {
+  id                Int            @id @default(autoincrement())
+  store_id          Int
+  payment_method_id Int
+  is_active         Boolean        @default(true)
+  PaymentMethods    PaymentMethods @relation(fields: [payment_method_id], references: [id])
+  Store             Store          @relation(fields: [store_id], references: [id])
+
+  @@unique([store_id, payment_method_id])
+}
+
+model StorePromotions {
+  id          Int      @id @default(autoincrement())
+  store_id    Int
+  name        String   @db.VarChar(250)
+  description String?  @db.VarChar(500)
+  start_date  DateTime
+  end_date    DateTime
+  discount    Decimal  @db.Decimal(5, 2)
+  is_active   Boolean  @default(true)
+  Store       Store    @relation(fields: [store_id], references: [id])
+}
+
+model StoreReports {
+  id          Int      @id @default(autoincrement())
+  store_id    Int
+  report_type String   @db.VarChar(50)
+  period      String   @db.VarChar(50)
+  data        Json
+  created_at  DateTime @default(now())
+  Store       Store    @relation(fields: [store_id], references: [id])
+}
+
+model StoreCashRegisterSettings {
+  id               Int       @id @default(autoincrement())
+  store_id         Int
+  cash_register_id Int
+  settings         Json
+  CashBoxes        CashBoxes @relation(fields: [cash_register_id], references: [id])
+  Store            Store     @relation(fields: [store_id], references: [id])
+
+  @@unique([store_id, cash_register_id])
+}
+
+model StockMovements {
+  id                 Int                  @id @default(autoincrement())
+  product_id         Int
+  from_store_id      Int?
+  to_store_id        Int?
+  quantity           Int
+  type               String
+  status             String               @default("PENDING")
+  notes              String?
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  created_by         Int
+  StockMovementAudit StockMovementAudit[]
+  CreatedBy          Users                @relation("UserStockMovements", fields: [created_by], references: [id])
+  FromStore          Store?               @relation("FromStore", fields: [from_store_id], references: [id])
+  Products           Products             @relation(fields: [product_id], references: [id])
+  ToStore            Store?               @relation("ToStore", fields: [to_store_id], references: [id])
+  StoreInventory     StoreInventory[]     @relation("StoreInventoryStockMovements")
+
+  @@index([product_id, type])
+  @@index([from_store_id, status])
+  @@index([to_store_id, status])
+}
+
+model ProductBatches {
+  id                  Int                   @id @default(autoincrement())
+  product_id          Int
+  batch_number        String                @db.VarChar(100)
+  expiry_date         DateTime?
+  cost_price          Decimal               @db.Decimal(10, 2)
+  created_at          DateTime              @default(now())
+  Products            Products              @relation(fields: [product_id], references: [id])
+  StoreInventoryBatch StoreInventoryBatch[]
+
+  @@index([expiry_date])
+  @@index([product_id, expiry_date])
+}
+
+model StoreInventoryBatch {
+  id                 Int            @id @default(autoincrement())
+  store_inventory_id Int
+  batch_id           Int
+  quantity           Int            @default(0)
+  ProductBatches     ProductBatches @relation(fields: [batch_id], references: [id])
+  StoreInventory     StoreInventory @relation(fields: [store_inventory_id], references: [id])
+
+  @@index([store_inventory_id])
+  @@index([batch_id])
+  @@index([quantity])
+  @@index([store_inventory_id, batch_id])
+  @@index([quantity, batch_id])
+}
+
+model StockAlerts {
+  id             Int            @id @default(autoincrement())
+  store_id       Int
+  product_id     Int
+  type           String         @db.VarChar(50)
+  status         String         @default("PENDING") @db.VarChar(50)
+  created_at     DateTime       @default(now())
+  resolved_at    DateTime?
+  Products       Products       @relation("ProductStockAlerts", fields: [product_id], references: [id])
+  Store          Store          @relation(fields: [store_id], references: [id])
+  StoreInventory StoreInventory @relation(fields: [store_id, product_id], references: [store_id, product_id])
+
+  @@unique([store_id, product_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+model WarehouseZone {
+  id          Int     @id @default(autoincrement())
+  store_id    Int
+  name        String  @db.VarChar(100)
+  description String? @db.VarChar(500)
+  capacity    Int?
+  Store       Store   @relation(fields: [store_id], references: [id])
+}
+
+model StoreInventoryAudit {
+  id                 Int            @id @default(autoincrement())
+  store_inventory_id Int
+  field_changed      String
+  old_value          String?
+  new_value          String?
+  changed_by         Int
+  changed_at         DateTime       @default(now())
+  User               Users          @relation(fields: [changed_by], references: [id])
+  StoreInventory     StoreInventory @relation(fields: [store_inventory_id], references: [id])
+
+  @@index([store_inventory_id])
+  @@index([changed_by])
+  @@index([changed_at])
+}
+
+model StockMovementAudit {
+  id                Int            @id @default(autoincrement())
+  stock_movement_id Int
+  field_changed     String
+  old_value         String?
+  new_value         String?
+  changed_by        Int
+  changed_at        DateTime       @default(now())
+  User              Users          @relation(fields: [changed_by], references: [id])
+  StockMovements    StockMovements @relation(fields: [stock_movement_id], references: [id])
+
+  @@index([stock_movement_id])
+  @@index([changed_by])
+  @@index([changed_at])
+}
+
+model InventorySummaryView {
+  id              Int      @id
+  store_id        Int
+  product_id      Int
+  current_stock   Int
+  reserved_stock  Int
+  available_stock Int
+  last_movement   DateTime
+  needs_restock   Boolean
+  is_overstocked  Boolean
+  Products        Products @relation(fields: [product_id], references: [id])
+  Store           Store    @relation(fields: [store_id], references: [id])
+
+  @@index([store_id, product_id])
+  @@index([needs_restock])
+  @@index([is_overstocked])
+}
+
+model LowStockAlertView {
+  id            Int      @id
+  store_id      Int
+  product_id    Int
+  current_stock Int
+  min_stock     Int
+  difference    Int
+  Products      Products @relation(fields: [product_id], references: [id])
+  Store         Store    @relation(fields: [store_id], references: [id])
+
+  @@index([store_id, product_id])
+  @@index([difference])
+}
+
+model OverstockAlertView {
+  id            Int      @id
+  store_id      Int
+  product_id    Int
+  current_stock Int
+  max_stock     Int
+  difference    Int
+  Products      Products @relation(fields: [product_id], references: [id])
+  Store         Store    @relation(fields: [store_id], references: [id])
+
+  @@index([store_id, product_id])
+  @@index([difference])
+}
+
+model queryPerformance {
+  id             Int      @id @default(autoincrement())
+  query_type     String
+  execution_time Int
+  rows_affected  Int
+  user_id        Int?
+  created_at     DateTime @default(now())
+}

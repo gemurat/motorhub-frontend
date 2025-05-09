@@ -1,9 +1,12 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { query } from '../../db'
+'use server'
 
-export async function getCategory() {
+import { getPool } from '../../db'
+import { NextResponse } from 'next/server'
+
+export async function GET() {
   try {
-    const result = await query('SELECT * FROM "TblCat_Familias"')
+    const pool = await getPool()
+    const result = await pool.query('SELECT * FROM "TblCat_Familias"')
     const processedResult = result.rows.map(
       (row: {
         Id: any
@@ -17,11 +20,12 @@ export async function getCategory() {
         consecutivo: row.Consecutivo,
       })
     )
-    // console.log("result", processedResult)
-
-    return processedResult
+    return NextResponse.json(processedResult)
   } catch (error) {
-    console.error('Error fetching data from PostgreSQL:', error)
-    throw new Error('Internal Server Error')
+    console.error('Error fetching categories:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch categories' },
+      { status: 500 }
+    )
   }
 }

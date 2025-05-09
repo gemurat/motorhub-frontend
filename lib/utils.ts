@@ -1,3 +1,6 @@
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
 export function capitalizeFirstLetter(val: string) {
   if (!val) return ''
   return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()
@@ -25,3 +28,7 @@ export const selectStatusItems = [
   { key: '2', value: 'COMPLETED', label: 'Completado' },
   { key: '3', value: 'CANCELLED', label: 'Cancelado' },
 ]
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}

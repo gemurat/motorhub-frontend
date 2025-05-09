@@ -22,7 +22,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   const isSSR = useIsSSR()
 
   const onChange = () => {
-    theme === 'light' ? setTheme('dark') : setTheme('light')
+    theme === 'light' ? setTheme('light') : setTheme('light')
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -38,7 +38,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     getBaseProps,
     getInputProps,
   } = useSwitch({
-    isSelected: theme === 'dark',
+    isSelected: theme === 'light',
     onChange,
   })
 
@@ -48,7 +48,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     <div
       role="switch"
       tabIndex={0}
-      aria-checked={theme === 'dark'}
+      aria-checked={theme === 'light'}
       onClick={onChange}
       onKeyDown={handleKeyDown}
       className={clsx('theme-switch', className)}

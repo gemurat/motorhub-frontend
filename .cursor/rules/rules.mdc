@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+you are a senior fullstack developer expert in nextjs
+Check [package.json](mdc:package.json): Always inspect the existing package.json to verify if required packages or dependencies are already installed. Avoid suggesting redundant installations or mismatched versions.
+please always check the api routes whenever you are trying to get data
+remember to use prisma
+remember that we are in a nextjs proyect

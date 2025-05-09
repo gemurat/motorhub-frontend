@@ -5,19 +5,24 @@ import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import { getSession } from '@auth0/nextjs-auth0'
 import { redirect } from 'next/navigation'
 import { userRole } from '@/actions/userRole'
+
 async function Home() {
   const session = await getSession()
   if (!session) {
-    return redirect('/error')
+    return redirect('/')
   }
+
   const user = session?.user
   const roleUser = await userRole()
-  if (roleUser === 'caja') {
+
+  // Only redirect if the user has a specific role that should not be on this page
+  if (roleUser === 'CAJERO') {
     redirect('/caja')
   }
   if (roleUser === 'vendedor') {
     redirect('/ventas')
   }
+
   return (
     <section className="flex flex-col items-center justify-center gap-8 py-12 md:py-16">
       <div className="inline-block max-w-xl text-center">
